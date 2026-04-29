@@ -1,0 +1,99 @@
+# ============================================================
+# RDA Stock Trading Bot — Master Configuration
+# All tunable parameters live here. Code reads this at startup.
+# ============================================================
+
+# --- ACCOUNT ---
+account:
+  capital: 100000               # ₹1,00,000 starting capital (Phase 1)
+  reserve_pct: 10               # Keep 10% as buffer for MTM, brokerage
+  trading_mode: PAPER           # PAPER | LIVE — overridden by TRADING_MODE env var
+
+# --- UNIVERSE ---
+universe:
+  index: NIFTY_500              # NIFTY_50 | NIFTY_100 | NIFTY_500
+  exclude_sectors: []           # e.g., ["PSU Banks"] — empty = all sectors
+  exclude_symbols:              # Symbols to permanently avoid
+    - YESBANK                   # Add anything you want to skip
+  min_avg_volume: 100000        # Liquidity floor — daily avg shares
+  min_price: 50                 # Skip penny stocks below ₹50
+  max_price: 10000              # Skip very high-priced (RELIANCE-type) for ₹1L capital
+
+# --- RISK MANAGEMENT ---
+risk:
+  risk_per_trade_pct: 2.0       # Max 2% of capital at risk per trade = ₹2,000
+  max_open_positions: 5         # Don't hold more than 5 stocks simultaneously
+  max_sector_exposure_pct: 40   # Max 40% in one sector
+  max_daily_loss_pct: 5         # Auto-stop if daily loss > 5% of capital
+  default_stoploss_pct: 2.0     # Default SL: 2% below entry (overridden per strategy)
+  default_target_pct: 4.0       # Default target: 4% (1:2 RR)
+  trailing_stop_enabled: true
+
+# --- STRATEGY ---
+strategy:
+  active: momentum_breakout      # Name of strategy module under strategies/
+  timeframe: 15min               # 1min | 5min | 15min | 1H | 1D
+  entry_window:                  # Only enter trades within this window (IST)
+    start: "09:30"
+    end: "14:30"
+  square_off_time: "15:15"       # Force-close all intraday positions
+  scan_interval_seconds: 60      # How often technical agent scans the universe
+
+# --- INDICATORS (defaults — strategy can override) ---
+indicators:
+  rsi_period: 14
+  rsi_oversold: 30
+  rsi_overbought: 70
+  ema_fast: 9
+  ema_slow: 21
+  ema_trend: 50
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  atr_period: 14
+
+# --- FUNDAMENTAL FILTERS (Phase 2) ---
+fundamental:
+  enabled: false                 # Turn on when fundamental agent is built
+  min_market_cap_cr: 1000        # Min ₹1,000 cr market cap
+  max_pe: 60
+  min_roe: 12
+  max_debt_to_equity: 1.5
+  exclude_loss_making: true
+
+# --- EXECUTION ---
+execution:
+  order_type: LIMIT              # MARKET | LIMIT | SL | SL-M
+  product_type: INTRADAY         # INTRADAY | CNC (delivery) | MIS
+  exchange: NSE                  # NSE | BSE
+  retry_attempts: 3
+  retry_delay_seconds: 2
+  slippage_buffer_pct: 0.05      # Add to limit price to ensure fill
+
+# --- LOGGING ---
+logging:
+  level: INFO                    # DEBUG | INFO | WARNING | ERROR
+  log_to_file: true
+  log_file_pattern: "logs/trading_{date}.log"
+  rotate_daily: true
+  retention_days: 90
+
+# --- NOTIFICATIONS ---
+notifications:
+  telegram_enabled: true
+  notify_on:
+    - signal_generated
+    - order_placed
+    - order_filled
+    - stop_loss_hit
+    - target_hit
+    - daily_summary
+    - error
+  daily_summary_time: "15:45"
+
+# --- PORTFOLIO / TAX ---
+portfolio:
+  capital_gains_tracking: true   # Track STCG/LTCG for RDA tax filing
+  brokerage_per_trade: 20        # Dhan flat ₹20 per trade
+  stt_pct: 0.025                 # Securities Transaction Tax (intraday sell side)
+  gst_pct: 18                    # GST on brokerage

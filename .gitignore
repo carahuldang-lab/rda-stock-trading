@@ -1,0 +1,57 @@
+# Environment & secrets
+.env
+*.env.local
+*credentials*
+*access_token*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/*.log
+logs/*.json
+*.log
+
+# Data (often large, regenerable)
+data/raw/
+data/cache/
+data/historical/*.csv
+data/historical/*.parquet
+*.h5
+
+# Backtest results
+backtests/results/
+backtests/output/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Keep folder structure with .gitkeep
+!.gitkeep
