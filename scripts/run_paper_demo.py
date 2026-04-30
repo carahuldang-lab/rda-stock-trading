@@ -36,6 +36,8 @@ import requests
 
 from utils.config_loader import load_config
 from utils.logger import get_logger
+from utils import event_bus
+from utils import trade_store
 from agents.technical import TechnicalAgent
 from agents.risk import RiskAgent
 from agents.execution import ExecutionAgent, Order
@@ -113,6 +115,9 @@ def main() -> None:
 
     log.info("Mode: {} | Capital: Rs.{:,}",
              execution.mode, config["account"]["capital"])
+    event_bus.emit("orchestrator", "scan_started",
+                   f"Mode={execution.mode}, scanning {len(DEMO_SYMBOLS)} stocks",
+                   level="info")
 
     signals_found = []
     rejected = []
@@ -121,9 +126,15 @@ def main() -> None:
     for symbol in DEMO_SYMBOLS:
         print(f"  -> {symbol:12s}", end=" ")
         try:
+            event_bus.emit("research", "scan_symbol",
+                           f"Checking F&O ban / earnings / news",
+                           symbol=symbol)
+
             df = fetch_history(symbol)
             if df.empty or len(df) < 50:
                 print("[skip] insufficient history")
+                event_bus.emit("technical", "skip", "insufficient history",
+                               symbol=symbol, level="warning")
                 continue
 
             df = technical.add_indicators(df)
@@ -133,10 +144,17 @@ def main() -> None:
                 last_close = df["close"].iloc[-1]
                 last_rsi = df["rsi"].iloc[-1]
                 print(f"[no signal] close=Rs.{last_close:.2f} RSI={last_rsi:.1f}")
+                event_bus.emit("technical", "no_signal",
+                               f"close={last_close:.2f}, RSI={last_rsi:.1f}",
+                               symbol=symbol)
                 continue
 
             print(f"[BUY] entry=Rs.{signal.entry_price:.2f} "
                   f"SL=Rs.{signal.stop_loss:.2f} target=Rs.{signal.target:.2f}")
+            event_bus.emit("technical", "signal_generated",
+                           f"BUY @ {signal.entry_price:.2f} | SL {signal.stop_loss:.2f} "
+                           f"| target {signal.target:.2f} | {signal.reasoning}",
+                           symbol=symbol, level="success")
 
             # 4. Risk validation
             sector = get_sector(symbol, master)
@@ -153,8 +171,22 @@ def main() -> None:
             )
             if not check.approved:
                 print(f"               [REJECTED] {check.reason}")
+                event_bus.emit("risk", "trade_rejected", check.reason,
+                               symbol=symbol, level="warning")
+                trade_store.append_signal(
+                    symbol=symbol, strategy=signal.strategy_name,
+                    signal_type=signal.signal_type.value,
+                    entry_price=signal.entry_price,
+                    stop_loss=signal.stop_loss, target=signal.target,
+                    confidence=signal.confidence, reasoning=signal.reasoning,
+                    status="rejected", rejection_reason=check.reason,
+                )
                 rejected.append((symbol, check.reason))
                 continue
+
+            event_bus.emit("risk", "trade_approved",
+                           f"qty={check.quantity}, sector={sector}",
+                           symbol=symbol, level="success")
 
             # 5. Place paper order
             order = Order(
@@ -166,6 +198,10 @@ def main() -> None:
                 price=signal.entry_price,
             )
             order = execution.place_order(order)
+            event_bus.emit("execution", "order_filled",
+                           f"qty={order.filled_qty} @ Rs.{order.avg_fill_price:.2f} "
+                           f"({execution.mode})",
+                           symbol=symbol, level="success")
 
             # 6. Record position
             portfolio.open_position(Position(
@@ -178,6 +214,18 @@ def main() -> None:
                 sector=sector,
                 strategy=signal.strategy_name,
             ))
+            event_bus.emit("portfolio", "position_opened",
+                           f"capital used Rs.{order.filled_qty * signal.entry_price:,.0f}",
+                           symbol=symbol)
+
+            trade_store.append_signal(
+                symbol=symbol, strategy=signal.strategy_name,
+                signal_type=signal.signal_type.value,
+                entry_price=signal.entry_price,
+                stop_loss=signal.stop_loss, target=signal.target,
+                confidence=signal.confidence, reasoning=signal.reasoning,
+                status="executed",
+            )
 
             risk_amount = (signal.entry_price - signal.stop_loss) * order.filled_qty
             print(f"               [FILLED] qty={order.filled_qty} "
@@ -188,13 +236,47 @@ def main() -> None:
         except Exception as e:
             print(f"[ERROR] {e}")
             log.exception("Failed for {}", symbol)
+            event_bus.emit("orchestrator", "error", str(e), symbol=symbol, level="error")
 
-    # 7. Summary
+    # 7. Persist data for dashboard
+    open_positions_data = [
+        {
+            "symbol": s,
+            "quantity": p.quantity,
+            "entry_price": p.entry_price,
+            "entry_time": p.entry_time.isoformat(timespec="seconds"),
+            "stop_loss": p.stop_loss,
+            "target": p.target,
+            "current_price": p.current_price or p.entry_price,
+            "unrealized_pnl": (p.current_price - p.entry_price) * p.quantity if p.current_price else 0.0,
+            "sector": p.sector,
+            "strategy": p.strategy,
+        }
+        for s, p in portfolio.open_positions.items()
+    ]
+    trade_store.write_positions(open_positions_data)
+
+    # 8. Summary
     print("\n" + "=" * 60)
     print("  SUMMARY")
     print("=" * 60)
 
     snap = portfolio.daily_snapshot()
+    trade_store.append_equity_snapshot({
+        "date": datetime.now().date().isoformat(),
+        "capital": snap.capital,
+        "cash": snap.cash,
+        "invested": snap.invested,
+        "unrealized_pnl": snap.unrealized_pnl,
+        "realized_pnl_today": snap.realized_pnl_today,
+        "open_positions": snap.open_positions,
+        "trades_today": snap.trades_today,
+        "win_rate": snap.win_rate,
+    })
+    event_bus.emit("orchestrator", "scan_completed",
+                   f"signals={len(signals_found)}, rejected={len(rejected)}, "
+                   f"open_positions={snap.open_positions}",
+                   level="info")
     print(f"  Mode:               {execution.mode}")
     print(f"  Symbols scanned:    {len(DEMO_SYMBOLS)}")
     print(f"  BUY signals:        {len(signals_found)}")

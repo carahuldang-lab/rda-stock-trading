@@ -1,0 +1,9 @@
+timestamp,symbol,strategy,signal_type,entry_price,stop_loss,target,confidence,reasoning,status,rejection_reason
+2026-04-30T07:49:50,ADANIENT,momentum_breakout,BUY,2425.90,2271.70,2734.31,0.70,Breakout above 20-period high (2420.00); vol 1.8x avg; RSI 77.1; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T07:49:50,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T07:55:37,ADANIENT,momentum_breakout,BUY,2425.90,2271.70,2734.31,0.70,Breakout above 20-period high (2420.00); vol 1.8x avg; RSI 77.1; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T07:55:38,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T08:00:06,ADANIENT,momentum_breakout,BUY,2425.90,2271.70,2734.31,0.70,Breakout above 20-period high (2420.00); vol 1.8x avg; RSI 77.1; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T08:00:06,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,not_traded,paper-trade flag off
+2026-04-30T08:12:18,ADANIENT,momentum_breakout,BUY,2425.90,2271.70,2734.31,0.70,Breakout above 20-period high (2420.00); vol 1.8x avg; RSI 77.1; EMAs aligned bullish,executed,
+2026-04-30T08:12:18,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,executed,

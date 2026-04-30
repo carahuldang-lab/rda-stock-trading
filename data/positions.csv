@@ -1,0 +1,3 @@
+symbol,quantity,entry_price,entry_time,stop_loss,target,current_price,unrealized_pnl,sector,strategy
+ADANIENT,12,2425.89990234375,2026-04-30T08:12:18,2271.695332569602,2734.3090418920456,2425.89990234375,0.0,Metals & Mining,momentum_breakout
+BANDHANBNK,125,198.3000030517578,2026-04-30T08:12:18,182.39608900539207,230.10783114448927,198.3000030517578,0.0,Financial Services,momentum_breakout

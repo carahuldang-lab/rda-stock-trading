@@ -52,10 +52,10 @@ indicators:
   macd_signal: 9
   atr_period: 14
 
-# --- FUNDAMENTAL FILTERS (Phase 2) ---
+# --- FUNDAMENTAL FILTERS ---
 fundamental:
-  enabled: false                 # Turn on when fundamental agent is built
-  min_market_cap_cr: 1000        # Min ₹1,000 cr market cap
+  enabled: true                  # Activated Day 3
+  min_market_cap_cr: 1000        # Min Rs.1,000 cr market cap
   max_pe: 60
   min_roe: 12
   max_debt_to_equity: 1.5

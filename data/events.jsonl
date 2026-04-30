@@ -1,0 +1,64 @@
+{"timestamp": "2026-04-29T23:11:42", "agent": "orchestrator", "level": "info", "symbol": "", "action": "scan_started", "details": "Mode=PAPER, scanning 10 stocks"}
+{"timestamp": "2026-04-29T23:11:42", "agent": "research", "level": "info", "symbol": "RELIANCE", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "technical", "level": "info", "symbol": "RELIANCE", "action": "no_signal", "details": "close=1425.40, RSI=60.9"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "research", "level": "info", "symbol": "TCS", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "technical", "level": "info", "symbol": "TCS", "action": "no_signal", "details": "close=2474.70, RSI=46.2"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "research", "level": "info", "symbol": "INFY", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "technical", "level": "info", "symbol": "INFY", "action": "no_signal", "details": "close=1167.50, RSI=32.7"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "research", "level": "info", "symbol": "HDFCBANK", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "technical", "level": "info", "symbol": "HDFCBANK", "action": "no_signal", "details": "close=779.00, RSI=43.1"}
+{"timestamp": "2026-04-29T23:11:44", "agent": "research", "level": "info", "symbol": "ICICIBANK", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "technical", "level": "info", "symbol": "ICICIBANK", "action": "no_signal", "details": "close=1281.00, RSI=43.3"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "research", "level": "info", "symbol": "HDFCLIFE", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "technical", "level": "info", "symbol": "HDFCLIFE", "action": "no_signal", "details": "close=594.40, RSI=42.3"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "research", "level": "info", "symbol": "BHARTIARTL", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "technical", "level": "info", "symbol": "BHARTIARTL", "action": "no_signal", "details": "close=1888.10, RSI=58.2"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "research", "level": "info", "symbol": "SBIN", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "technical", "level": "info", "symbol": "SBIN", "action": "no_signal", "details": "close=1086.90, RSI=51.4"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "research", "level": "info", "symbol": "LT", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "technical", "level": "info", "symbol": "LT", "action": "no_signal", "details": "close=4096.10, RSI=59.7"}
+{"timestamp": "2026-04-29T23:11:45", "agent": "research", "level": "info", "symbol": "ITC", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:11:46", "agent": "technical", "level": "info", "symbol": "ITC", "action": "no_signal", "details": "close=316.25, RSI=62.8"}
+{"timestamp": "2026-04-29T23:11:46", "agent": "orchestrator", "level": "info", "symbol": "", "action": "scan_completed", "details": "signals=0, rejected=0, open_positions=0"}
+{"timestamp": "2026-04-29T23:16:36", "agent": "orchestrator", "level": "info", "symbol": "", "action": "scan_started", "details": "Mode=PAPER, scanning 10 stocks"}
+{"timestamp": "2026-04-29T23:16:36", "agent": "research", "level": "info", "symbol": "RELIANCE", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:38", "agent": "technical", "level": "info", "symbol": "RELIANCE", "action": "no_signal", "details": "close=1425.40, RSI=60.9"}
+{"timestamp": "2026-04-29T23:16:38", "agent": "research", "level": "info", "symbol": "TCS", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "technical", "level": "info", "symbol": "TCS", "action": "no_signal", "details": "close=2474.70, RSI=46.2"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "research", "level": "info", "symbol": "INFY", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "technical", "level": "info", "symbol": "INFY", "action": "no_signal", "details": "close=1167.50, RSI=32.7"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "research", "level": "info", "symbol": "HDFCBANK", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "technical", "level": "info", "symbol": "HDFCBANK", "action": "no_signal", "details": "close=779.00, RSI=43.1"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "research", "level": "info", "symbol": "ICICIBANK", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "technical", "level": "info", "symbol": "ICICIBANK", "action": "no_signal", "details": "close=1281.00, RSI=43.3"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "research", "level": "info", "symbol": "HDFCLIFE", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "technical", "level": "info", "symbol": "HDFCLIFE", "action": "no_signal", "details": "close=594.40, RSI=42.3"}
+{"timestamp": "2026-04-29T23:16:39", "agent": "research", "level": "info", "symbol": "BHARTIARTL", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "technical", "level": "info", "symbol": "BHARTIARTL", "action": "no_signal", "details": "close=1888.10, RSI=58.2"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "research", "level": "info", "symbol": "SBIN", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "technical", "level": "info", "symbol": "SBIN", "action": "no_signal", "details": "close=1086.90, RSI=51.4"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "research", "level": "info", "symbol": "LT", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "technical", "level": "info", "symbol": "LT", "action": "no_signal", "details": "close=4096.10, RSI=59.7"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "research", "level": "info", "symbol": "ITC", "action": "scan_symbol", "details": "Checking F&O ban / earnings / news"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "technical", "level": "info", "symbol": "ITC", "action": "no_signal", "details": "close=316.25, RSI=62.8"}
+{"timestamp": "2026-04-29T23:16:40", "agent": "orchestrator", "level": "info", "symbol": "", "action": "scan_completed", "details": "signals=0, rejected=0, open_positions=0"}
+{"timestamp": "2026-04-30T07:49:41", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_started", "details": "Scanning 100 stocks"}
+{"timestamp": "2026-04-30T07:49:50", "agent": "technical", "level": "success", "symbol": "ADANIENT", "action": "signal_generated", "details": "BUY @ 2425.90 | grade=A | score=76.7"}
+{"timestamp": "2026-04-30T07:49:50", "agent": "technical", "level": "success", "symbol": "BANDHANBNK", "action": "signal_generated", "details": "BUY @ 198.30 | grade=A+ | score=142.3"}
+{"timestamp": "2026-04-30T07:49:50", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_completed", "details": "scored=100, signals=2, rejected=0, skipped=0"}
+{"timestamp": "2026-04-30T07:55:31", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_started", "details": "Scanning 100 stocks"}
+{"timestamp": "2026-04-30T07:55:37", "agent": "technical", "level": "success", "symbol": "ADANIENT", "action": "signal_generated", "details": "BUY @ 2425.90 | grade=A | score=76.7"}
+{"timestamp": "2026-04-30T07:55:38", "agent": "technical", "level": "success", "symbol": "BANDHANBNK", "action": "signal_generated", "details": "BUY @ 198.30 | grade=A+ | score=142.3"}
+{"timestamp": "2026-04-30T07:55:38", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_completed", "details": "scored=100, signals=2, rejected=0, skipped=0"}
+{"timestamp": "2026-04-30T08:00:01", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_started", "details": "Scanning 100 stocks"}
+{"timestamp": "2026-04-30T08:00:06", "agent": "technical", "level": "success", "symbol": "ADANIENT", "action": "signal_generated", "details": "BUY @ 2425.90 | grade=B | score=73.0"}
+{"timestamp": "2026-04-30T08:00:06", "agent": "technical", "level": "success", "symbol": "BANDHANBNK", "action": "signal_generated", "details": "BUY @ 198.30 | grade=D | score=44.2"}
+{"timestamp": "2026-04-30T08:00:06", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_completed", "details": "scored=100, signals=2, rejected=0, skipped=0"}
+{"timestamp": "2026-04-30T08:12:13", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_started", "details": "Scanning 100 stocks"}
+{"timestamp": "2026-04-30T08:12:18", "agent": "technical", "level": "success", "symbol": "ADANIENT", "action": "signal_generated", "details": "BUY @ 2425.90 | grade=B | score=73.0"}
+{"timestamp": "2026-04-30T08:12:18", "agent": "execution", "level": "success", "symbol": "ADANIENT", "action": "order_filled", "details": "qty=12 @ 2425.90"}
+{"timestamp": "2026-04-30T08:12:18", "agent": "technical", "level": "success", "symbol": "BANDHANBNK", "action": "signal_generated", "details": "BUY @ 198.30 | grade=D | score=44.2"}
+{"timestamp": "2026-04-30T08:12:18", "agent": "execution", "level": "success", "symbol": "BANDHANBNK", "action": "order_filled", "details": "qty=125 @ 198.30"}
+{"timestamp": "2026-04-30T08:12:18", "agent": "orchestrator", "level": "info", "symbol": "", "action": "bulk_scan_completed", "details": "scored=100, signals=2, rejected=0, skipped=0"}
+{"timestamp": "2026-04-30T08:15:52", "agent": "scheduler", "level": "success", "symbol": "", "action": "started", "details": "Mode=PAPER"}
+{"timestamp": "2026-04-30T08:20:45", "agent": "scheduler", "level": "warning", "symbol": "", "action": "stopped", "details": "User Ctrl+C"}

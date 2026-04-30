@@ -14,7 +14,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import List
+from typing import List, Optional
+
+from .news_scraper import (
+    load_news, get_negative_news_symbols, fetch_news as fetch_news_for,
+)
 
 
 @dataclass
@@ -41,6 +45,7 @@ class ResearchAgent:
 
     def __init__(self, config: dict):
         self.config = config
+        self._negative_symbols: Optional[set] = None
 
     def get_earnings_this_week(self) -> List[str]:
         """Return symbols reporting earnings in the next 5 trading days.
@@ -74,12 +79,20 @@ class ResearchAgent:
         return {}
 
     def should_avoid_today(self, symbol: str) -> tuple[bool, str]:
-        """Top-level check: should we avoid trading this symbol today?
-
-        Returns (avoid_flag, reason).
-        """
+        """Top-level check: should we avoid trading this symbol today?"""
         if symbol in self.get_fno_ban_list():
             return True, "Stock in F&O ban list"
         if symbol in self.get_earnings_this_week():
-            return True, "Earnings in next 5 days — gap risk"
+            return True, "Earnings in next 5 days - gap risk"
+        if self._negative_symbols is None:
+            self._negative_symbols = get_negative_news_symbols()
+        if symbol in self._negative_symbols:
+            return True, "Negative news headline detected"
         return False, ""
+
+    def get_news_for(self, symbol: str, limit: int = 3) -> list[dict]:
+        """Return recent headlines (cached if possible) for dashboard display."""
+        df = load_news()
+        if df.empty:
+            return []
+        return df[df["symbol"] == symbol].head(limit).to_dict("records")

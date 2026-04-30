@@ -36,6 +36,11 @@ matplotlib>=3.8.0
 plotly>=5.18.0
 seaborn>=0.13.0
 
+# --- Dashboard ---
+streamlit>=1.30.0
+streamlit-autorefresh>=1.0.1
+streamlit-extras>=0.4.0
+
 # --- Notifications ---
 python-telegram-bot>=20.7  # Telegram alerts (you already use Telegram for RDA posts)
 
