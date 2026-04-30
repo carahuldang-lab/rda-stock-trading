@@ -60,26 +60,62 @@ def send_telegram(text: str) -> bool:
 
 
 def is_market_open() -> bool:
-    now = datetime.now()
-    if now.weekday() >= 5:        # Sat/Sun
+    """Returns True only if today is a trading day AND within market hours."""
+    from agents.research.holiday_calendar import is_trading_day
+    is_td, reason = is_trading_day()
+    if not is_td:
         return False
+    now = datetime.now()
     return dt_time(9, 15) <= now.time() <= dt_time(15, 30)
 
 
 def is_market_holiday() -> bool:
-    """Stub — extend with NSE holiday calendar."""
-    return False
+    """Returns True if today is a trading-day holiday or weekend."""
+    from agents.research.holiday_calendar import is_trading_day
+    is_td, _ = is_trading_day()
+    return not is_td
 
 
 # ---------------------------------------------------------------
 # Scheduled tasks
 # ---------------------------------------------------------------
 def task_premarket():
+    """Pre-market: check trading day, refresh news + fundamentals if trading."""
+    from agents.research.holiday_calendar import is_trading_day, next_trading_day
+
+    is_td, reason = is_trading_day()
+    if not is_td:
+        # Holiday — announce but still refresh data so it's ready for next session
+        next_day, skipped = next_trading_day()
+        log.info("Today is non-trading day ({}). Next trading: {}",
+                 reason, next_day.isoformat())
+        event_bus.emit("scheduler", "holiday",
+                       f"Non-trading: {reason}. Next: {next_day.isoformat()}",
+                       level="warning")
+        send_telegram(
+            f"[RDA] No trading today ({reason}).\n"
+            f"Next trading day: {next_day.strftime('%a, %d %b %Y')}.\n"
+            f"Refreshing news + analyst data so bot is ready."
+        )
+        # Still refresh data on holidays (to be ready for Monday/next session)
+        subprocess.run(
+            [PYTHON_EXE, "-c",
+             "import sys; sys.path.insert(0, '.'); "
+             "from agents.research.news_scraper import refresh_news; "
+             "import pandas as pd; "
+             "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].head(100).tolist())"],
+            cwd=PROJECT_ROOT,
+        )
+        return
+
     log.info("Pre-market: refreshing news + fundamentals")
     event_bus.emit("scheduler", "premarket_started", "", level="info")
-    # News refresh (top 100 stocks for speed)
     subprocess.run(
-        [PYTHON_EXE, "-m", "agents.research.news_scraper"],
+        [PYTHON_EXE, "-c",
+         "import sys; sys.path.insert(0, '.'); "
+         "from agents.research.news_scraper import refresh_news; "
+         "import pandas as pd; "
+         "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].head(200).tolist())"],
         cwd=PROJECT_ROOT,
     )
     send_telegram(
@@ -124,8 +160,16 @@ def task_exit_manager():
 
 
 def task_weekly_rebalance():
-    """Monday morning — close stale positions, refresh top fortress candidates."""
+    """Monday morning — close stale positions, refresh top fortress candidates.
+
+    Auto-skips if Monday is a holiday (uses NSE calendar).
+    """
+    from agents.research.holiday_calendar import is_trading_day
     if datetime.now().weekday() != 0:    # Monday only
+        return
+    is_td, reason = is_trading_day()
+    if not is_td:
+        log.info("Weekly rebalance skipped — Monday is non-trading ({})", reason)
         return
     log.info("Running weekly rebalance")
     event_bus.emit("scheduler", "weekly_rebalance", "", level="info")
@@ -190,6 +234,17 @@ def task_eod_report():
 # ---------------------------------------------------------------
 # Schedule registration
 # ---------------------------------------------------------------
+# Holiday calendar refresh — once weekly on Sunday 23:00 (when API is reachable)
+def task_refresh_holidays():
+    try:
+        from agents.research.holiday_calendar import refresh_holidays
+        n = refresh_holidays()
+        log.info("Holiday calendar refreshed - {} entries", n)
+    except Exception as e:
+        log.warning("Holiday refresh failed: {}", e)
+
+schedule.every().sunday.at("23:00").do(task_refresh_holidays)
+
 # Pre-market
 schedule.every().day.at("08:55").do(task_weekly_rebalance)   # only fires on Monday
 schedule.every().day.at("09:00").do(task_premarket)
