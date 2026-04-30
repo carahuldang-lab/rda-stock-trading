@@ -89,16 +89,49 @@ def task_premarket():
 
 
 def task_scan():
+    """Daily/swing universe scan — runs hourly."""
     if not is_market_open():
-        log.info("Market closed — skipping scan")
+        log.info("Market closed - skipping scan")
         return
-    log.info("Running universe scan")
+    log.info("Running universe scan (swing strategies)")
     event_bus.emit("scheduler", "scan_triggered", "", level="info")
-    result = subprocess.run(
+    subprocess.run(
         [PYTHON_EXE, "scripts/scan_universe.py", "--limit", "200", "--paper-trade"],
         cwd=PROJECT_ROOT, capture_output=True, text=True,
     )
-    log.info("Scan completed (rc={})", result.returncode)
+
+
+def task_scalp_scan():
+    """Intraday scalp scan — runs every 5 minutes during market."""
+    if not is_market_open():
+        return
+    log.info("Running scalp scan (5min ORB)")
+    subprocess.run(
+        [PYTHON_EXE, "scripts/scan_scalp.py", "--limit", "30"],
+        cwd=PROJECT_ROOT, capture_output=True, text=True,
+    )
+
+
+def task_weekly_rebalance():
+    """Monday morning — close stale positions, refresh top fortress candidates."""
+    if datetime.now().weekday() != 0:    # Monday only
+        return
+    log.info("Running weekly rebalance")
+    event_bus.emit("scheduler", "weekly_rebalance", "", level="info")
+    # Refresh fundamentals + analyst reports (top 100 stocks)
+    subprocess.run(
+        [PYTHON_EXE, "-m", "agents.fundamental.screener", "100"],
+        cwd=PROJECT_ROOT,
+    )
+    subprocess.run(
+        [PYTHON_EXE, "-c",
+         "import sys; sys.path.insert(0, '.'); "
+         "from agents.research.analyst_reports import refresh_reports; "
+         "import pandas as pd; "
+         "refresh_reports(pd.read_csv('data/nifty500.csv')['symbol'].head(100).tolist())"],
+        cwd=PROJECT_ROOT,
+    )
+    send_telegram(f"[RDA] Weekly rebalance done at {datetime.now().strftime('%H:%M')}.")
 
 
 def task_eod_report():
@@ -146,13 +179,27 @@ def task_eod_report():
 # ---------------------------------------------------------------
 # Schedule registration
 # ---------------------------------------------------------------
+# Pre-market
+schedule.every().day.at("08:55").do(task_weekly_rebalance)   # only fires on Monday
 schedule.every().day.at("09:00").do(task_premarket)
+
+# Hourly swing scans (Fortress, Momentum, Mean-Reversion)
 schedule.every().day.at("09:30").do(task_scan)
 schedule.every().day.at("10:30").do(task_scan)
 schedule.every().day.at("11:30").do(task_scan)
 schedule.every().day.at("12:30").do(task_scan)
 schedule.every().day.at("13:30").do(task_scan)
 schedule.every().day.at("14:30").do(task_scan)
+
+# Intraday scalps every 5 min from 09:30 - 14:00
+for hh in range(9, 14):
+    for mm in (35, 40, 45, 50, 55, 0, 5, 10, 15, 20, 25, 30):
+        try:
+            schedule.every().day.at(f"{hh:02d}:{mm:02d}").do(task_scalp_scan)
+        except Exception:
+            pass
+
+# EOD
 schedule.every().day.at("15:45").do(task_eod_report)
 
 

@@ -32,7 +32,10 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 RESULTS_FILE = DATA_DIR / "backtest_results.csv"
 TRADES_FILE = DATA_DIR / "backtest_trades.csv"
 
+from strategies.fortress import generate_signal as fortress_signal
+
 STRATEGIES = {
+    "fortress": fortress_signal,
     "momentum_breakout": momentum_signal,
     "mean_reversion": mean_rev_signal,
 }

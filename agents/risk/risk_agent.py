@@ -30,6 +30,8 @@ class RiskAgent:
         self.risk_cfg = config["risk"]
         self.account_cfg = config["account"]
         self.daily_loss_halt = False    # Set true if kill switch triggered
+        self.use_kelly = self.risk_cfg.get("use_kelly_sizing", False)
+        self.regime_size_multiplier = 1.0   # set externally by orchestrator
 
     # ------------------------------------------------------------------
     # Position sizing
@@ -38,27 +40,41 @@ class RiskAgent:
         self,
         entry_price: float,
         stop_loss: float,
+        target: float = 0.0,
+        win_rate: float = 0.5,
     ) -> int:
-        """Calculate shares to buy based on risk-per-trade rule.
+        """Calculate shares to buy.
 
-        Formula:
-            risk_amount = capital * risk_per_trade_pct / 100
-            risk_per_share = entry_price - stop_loss
-            shares = floor(risk_amount / risk_per_share)
+        Two modes:
+            A. Fixed-risk (default) — risk fixed % of capital per trade.
+            B. Kelly Criterion — fractional Kelly using historical win rate / RR.
+
+        Both modes:
+            - Multiplied by regime_size_multiplier (0.0 if BEARISH, 0.5 if NEUTRAL, 1.0 if BULLISH).
+            - Capped at 30% of capital per single position.
         """
         capital = self.account_cfg["capital"]
-        risk_pct = self.risk_cfg["risk_per_trade_pct"]
-        risk_amount = capital * risk_pct / 100         # ₹2,000 for ₹1L @ 2%
-
         risk_per_share = entry_price - stop_loss
         if risk_per_share <= 0:
             return 0
 
-        shares = int(risk_amount / risk_per_share)
+        # Mode B: Kelly Criterion
+        if self.use_kelly and target > 0:
+            from utils.kelly import kelly_fraction
+            avg_win_pct = (target - entry_price) / entry_price * 100
+            avg_loss_pct = (entry_price - stop_loss) / entry_price * 100
+            f = kelly_fraction(win_rate, avg_win_pct, avg_loss_pct, fractional=0.25)
+            base_shares = int((capital * f) / entry_price)
+        else:
+            # Mode A: fixed-risk
+            risk_amount = capital * self.risk_cfg["risk_per_trade_pct"] / 100
+            base_shares = int(risk_amount / risk_per_share)
 
-        # Cap by available capital (don't use more than 30% per trade)
-        max_capital_per_trade = capital * 0.30
-        max_shares_by_capital = int(max_capital_per_trade / entry_price)
+        # Apply regime multiplier
+        shares = int(base_shares * self.regime_size_multiplier)
+
+        # Cap by 30% of capital
+        max_shares_by_capital = int((capital * 0.30) / entry_price)
         return min(shares, max_shares_by_capital)
 
     # ------------------------------------------------------------------

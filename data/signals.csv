@@ -7,3 +7,102 @@ timestamp,symbol,strategy,signal_type,entry_price,stop_loss,target,confidence,re
 2026-04-30T08:00:06,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,not_traded,paper-trade flag off
 2026-04-30T08:12:18,ADANIENT,momentum_breakout,BUY,2425.90,2271.70,2734.31,0.70,Breakout above 20-period high (2420.00); vol 1.8x avg; RSI 77.1; EMAs aligned bullish,executed,
 2026-04-30T08:12:18,BANDHANBNK,momentum_breakout,BUY,198.30,182.40,230.11,0.70,Breakout above 20-period high (183.09); vol 13.3x avg; RSI 72.9; EMAs aligned bullish,executed,
+2026-04-30T09:30:22,CEMPRO,momentum_breakout,BUY,761.50,697.18,890.15,0.70,Breakout above 20-period high (702.95); vol 7.7x avg; RSI 76.6; EMAs aligned bullish,executed,
+2026-04-30T09:30:26,CEMPRO,momentum_breakout,BUY,761.50,697.18,890.15,0.70,Breakout above 20-period high (702.95); vol 7.7x avg; RSI 76.6; EMAs aligned bullish,executed,
+2026-04-30T09:30:33,CEMPRO,momentum_breakout,BUY,761.50,697.18,890.15,0.70,Breakout above 20-period high (702.95); vol 7.8x avg; RSI 76.6; EMAs aligned bullish,executed,
+2026-04-30T10:03:03,3MINDIA,catalyst_c,BUY,32880.00,31401.39,35344.35,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Invalid stop-loss → zero position size
+2026-04-30T10:03:03,ABB,catalyst_c,BUY,7154.50,6825.91,7702.16,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:03:03,ACMESOLAR,catalyst_c,BUY,305.70,288.25,334.78,0.60,Catalyst C (1 signals): news positive (1 headline),executed,
+2026-04-30T10:03:03,AIAENG,catalyst_c,BUY,3919.40,3742.18,4214.77,0.60,Catalyst C (1 signals): news positive (1 headline),executed,
+2026-04-30T10:03:03,AUBANK,catalyst_c,BUY,1005.90,958.92,1084.20,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:03:03,AWL,catalyst_c,BUY,198.34,187.43,216.52,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:03:03,AADHARHFC,catalyst_c,BUY,485.00,462.17,523.05,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,AARTIIND,catalyst_c,BUY,505.30,480.88,546.00,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,AAVAS,catalyst_b,BUY,1355.20,1286.54,1469.64,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+18% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ADANIENSOL,catalyst_c,BUY,1363.35,1273.26,1513.50,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ADANIGREEN,catalyst_c,BUY,1216.25,1146.00,1333.33,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ADANIPORTS,catalyst_c,BUY,1613.00,1544.05,1727.91,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ATGL,catalyst_c,BUY,637.25,592.95,711.08,0.60,Tier 4 (weak sector Oil Gas & Consumable Fuels): Catalyst C (1 signals): news positive (4 headlines),filtered,weak sector
+2026-04-30T10:03:03,ABCAPITAL,catalyst_c,BUY,343.60,326.23,372.54,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ABFRL,catalyst_c,BUY,64.95,61.15,71.28,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ABLBL,catalyst_c,BUY,103.72,98.65,112.18,0.60,Catalyst C (1 signals): analyst buy (+42% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ABREL,catalyst_c,BUY,1522.00,1436.39,1664.68,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ABSLAMC,catalyst_c,BUY,1016.55,948.36,1130.20,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,AEGISLOG,catalyst_b,BUY,700.45,657.24,772.47,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+19% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,AFCONS,catalyst_b,BUY,333.50,311.46,370.23,0.70,Catalyst B (2 signals): news positive (1 headline) | analyst buy (+24% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ABDL,catalyst_b,BUY,546.85,514.79,600.28,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+26% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,AMBER,catalyst_c,BUY,7904.00,7497.31,8581.81,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ANANDRATHI,catalyst_c,BUY,3628.40,3491.45,3856.65,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ANGELONE,catalyst_c,BUY,308.46,291.67,336.45,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ANTHEM,catalyst_c,BUY,769.25,732.48,830.54,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ANURAS,catalyst_c,BUY,1288.70,1231.96,1383.27,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,APARINDS,catalyst_c,BUY,12479.00,11665.57,13834.71,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:03:03,APOLLOHOSP,catalyst_b,BUY,7587.00,7341.58,7996.04,0.70,Catalyst B (2 signals): news positive (5 headlines) | analyst buy (+15% upside),rejected,Max positions reached (5)
+2026-04-30T10:03:03,APTUS,catalyst_c,BUY,264.00,251.13,285.46,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ASIANPAINT,catalyst_c,BUY,2414.10,2321.82,2567.89,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:03:03,ASTERDM,catalyst_c,BUY,693.85,663.40,744.60,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,3MINDIA,catalyst_c,BUY,32895.00,31416.51,35359.15,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Invalid stop-loss → zero position size
+2026-04-30T10:04:24,ABB,catalyst_c,BUY,7147.50,6818.00,7696.67,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:04:24,ACMESOLAR,catalyst_c,BUY,305.95,288.50,335.04,0.60,Catalyst C (1 signals): news positive (1 headline),executed,
+2026-04-30T10:04:24,AIAENG,catalyst_c,BUY,3917.40,3740.19,4212.75,0.60,Catalyst C (1 signals): news positive (1 headline),executed,
+2026-04-30T10:04:24,AUBANK,catalyst_c,BUY,1005.45,958.47,1083.75,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:04:24,AWL,catalyst_c,BUY,198.40,187.48,216.60,0.60,Catalyst C (1 signals): news positive (3 headlines),executed,
+2026-04-30T10:04:24,AADHARHFC,catalyst_c,BUY,485.00,462.17,523.05,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,AARTIIND,catalyst_c,BUY,504.40,479.98,545.09,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,AAVAS,catalyst_b,BUY,1355.40,1286.74,1469.83,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+18% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ADANIENSOL,catalyst_c,BUY,1364.70,1274.61,1514.84,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ADANIGREEN,catalyst_c,BUY,1218.05,1147.80,1335.14,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ADANIPORTS,catalyst_c,BUY,1614.50,1545.55,1729.41,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ADANIPOWER,catalyst_c,BUY,218.10,206.02,238.23,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ATGL,catalyst_c,BUY,636.60,592.30,710.43,0.60,Tier 4 (weak sector Oil Gas & Consumable Fuels): Catalyst C (1 signals): news positive (4 headlines),filtered,weak sector
+2026-04-30T10:04:24,ABCAPITAL,catalyst_c,BUY,343.40,326.03,372.34,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ABFRL,catalyst_c,BUY,64.88,61.08,71.21,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ABLBL,catalyst_c,BUY,103.60,98.53,112.06,0.60,Catalyst C (1 signals): analyst buy (+42% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ABREL,catalyst_c,BUY,1516.10,1430.11,1659.41,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ABSLAMC,catalyst_c,BUY,1016.05,947.86,1129.70,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,AEGISLOG,catalyst_b,BUY,700.00,656.78,772.03,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+19% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:24,AFCONS,catalyst_b,BUY,333.45,311.41,370.18,0.70,Catalyst B (2 signals): news positive (1 headline) | analyst buy (+24% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ABDL,catalyst_b,BUY,545.95,513.88,599.39,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+26% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:24,AMBER,catalyst_c,BUY,7903.00,7496.34,8580.77,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:24,ANANDRATHI,catalyst_c,BUY,3621.90,3484.95,3850.16,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,ANGELONE,catalyst_c,BUY,308.35,291.56,336.34,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,ANTHEM,catalyst_c,BUY,768.85,732.08,830.14,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:04:25,ANURAS,catalyst_c,BUY,1294.90,1238.16,1389.47,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,APARINDS,catalyst_c,BUY,12461.00,11647.56,13816.73,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:04:25,APOLLOHOSP,catalyst_b,BUY,7584.50,7339.08,7993.54,0.70,Catalyst B (2 signals): news positive (5 headlines) | analyst buy (+15% upside),rejected,Max positions reached (5)
+2026-04-30T10:04:25,APTUS,catalyst_c,BUY,264.00,251.12,285.46,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,ASIANPAINT,catalyst_c,BUY,2415.30,2323.03,2569.08,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,ASTERDM,catalyst_c,BUY,693.05,662.58,743.83,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:04:25,BAJFINANCE,fortress_b,BUY,953.10,910.84,1023.54,0.65,"Fortress B 6/8 (missed: F2,F4): breakout above 946.35; RSI 61; 5d ROC 3.8%",rejected,Max positions reached (5)
+2026-04-30T10:06:11,BAJFINANCE,fortress_b,BUY,952.15,909.89,1022.59,0.65,"Fortress B 6/8 (missed: F2,F4): breakout above 946.35; RSI 61; 5d ROC 3.7%",executed,
+2026-04-30T10:06:11,APARINDS,fortress_b,BUY,12466.50,11653.06,13822.23,0.65,"Fortress B 6/8 (missed: F4,F6): breakout above 12485.50; EMAs aligned bullish; RSI 69; 5d ROC 5.3%",executed,
+2026-04-30T10:06:11,ANTHEM,catalyst_c,BUY,767.95,731.18,829.24,0.60,Catalyst C (1 signals): news positive (1 headline),executed,
+2026-04-30T10:06:11,ABFRL,catalyst_c,BUY,64.76,60.95,71.11,0.60,Catalyst C (1 signals): news positive (2 headlines),executed,
+2026-04-30T10:06:11,APTUS,catalyst_c,BUY,264.01,251.13,285.47,0.60,Catalyst C (1 signals): news positive (2 headlines),executed,
+2026-04-30T10:06:11,AMBER,catalyst_c,BUY,7906.00,7499.34,8583.77,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ASTERDM,catalyst_c,BUY,694.40,663.93,745.18,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ADANIPORTS,catalyst_c,BUY,1615.00,1546.05,1729.91,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ABCAPITAL,catalyst_c,BUY,343.45,326.08,372.39,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ACMESOLAR,catalyst_c,BUY,305.65,288.20,334.74,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AIAENG,catalyst_c,BUY,3915.50,3738.29,4210.85,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AADHARHFC,catalyst_c,BUY,483.70,460.83,521.81,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ANANDRATHI,catalyst_c,BUY,3626.90,3489.95,3855.16,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,3MINDIA,catalyst_c,BUY,32865.00,31386.51,35329.15,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AFCONS,catalyst_b,BUY,333.70,311.66,370.43,0.70,Catalyst B (2 signals): news positive (1 headline) | analyst buy (+24% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ATGL,catalyst_c,BUY,637.75,593.45,711.58,0.60,Tier 4 (weak sector Oil Gas & Consumable Fuels): Catalyst C (1 signals): news positive (4 headlines),filtered,weak sector
+2026-04-30T10:06:11,AARTIIND,catalyst_c,BUY,503.65,479.23,544.34,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ABREL,catalyst_c,BUY,1518.30,1432.31,1661.61,0.60,Catalyst C (1 signals): news positive (1 headline),rejected,Max positions reached (5)
+2026-04-30T10:06:11,APOLLOHOSP,catalyst_b,BUY,7587.00,7341.58,7996.04,0.70,Catalyst B (2 signals): news positive (5 headlines) | analyst buy (+15% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ABB,catalyst_c,BUY,7149.50,6819.73,7699.12,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AUBANK,catalyst_c,BUY,1005.50,958.52,1083.80,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AAVAS,catalyst_b,BUY,1355.10,1286.44,1469.53,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+18% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:11,AEGISLOG,catalyst_b,BUY,699.05,655.73,771.26,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+19% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ABDL,catalyst_b,BUY,545.25,513.15,598.75,0.70,Catalyst B (2 signals): news positive (2 headlines) | analyst buy (+26% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:11,ANGELONE,catalyst_c,BUY,308.45,291.66,336.44,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ABSLAMC,catalyst_c,BUY,1015.30,947.11,1128.95,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ASIANPAINT,catalyst_c,BUY,2416.20,2323.93,2569.98,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,AWL,catalyst_c,BUY,198.40,187.46,216.64,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ANURAS,catalyst_c,BUY,1296.50,1239.76,1391.07,0.60,Catalyst C (1 signals): news positive (2 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ADANIGREEN,catalyst_c,BUY,1222.45,1152.20,1339.54,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ABLBL,catalyst_c,BUY,103.64,98.57,112.10,0.60,Catalyst C (1 signals): analyst buy (+42% upside),rejected,Max positions reached (5)
+2026-04-30T10:06:12,ADANIENSOL,catalyst_c,BUY,1367.20,1277.11,1517.34,0.60,Catalyst C (1 signals): news positive (3 headlines),rejected,Max positions reached (5)

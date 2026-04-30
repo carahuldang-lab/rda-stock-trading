@@ -121,6 +121,22 @@ def load_backtest_trades() -> pd.DataFrame:
     return pd.read_csv(f)
 
 
+@st.cache_data(ttl=60)
+def load_market_regime() -> pd.DataFrame:
+    f = DATA_DIR / "market_regime.csv"
+    if not f.exists():
+        return pd.DataFrame()
+    return pd.read_csv(f)
+
+
+@st.cache_data(ttl=300)
+def load_analyst_reports() -> pd.DataFrame:
+    f = DATA_DIR / "analyst_reports.csv"
+    if not f.exists():
+        return pd.DataFrame()
+    return pd.read_csv(f)
+
+
 def get_kpis(config: dict, positions: pd.DataFrame, trades: pd.DataFrame) -> dict:
     """Compute top-level KPIs."""
     capital = config["account"]["capital"]

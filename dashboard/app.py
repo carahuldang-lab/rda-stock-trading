@@ -27,7 +27,9 @@ from dashboard.data_loader import (
     load_positions, load_trades, load_signals, load_equity_curve,
     load_events, load_universe, load_candidates, get_kpis,
     load_fundamentals, load_news, load_backtest_results, load_backtest_trades,
+    load_market_regime, load_analyst_reports,
 )
+from utils import holdings_manager as hm
 from utils.config_loader import load_config
 
 # ---------------------------------------------------------------
@@ -50,7 +52,7 @@ config = load_config()
 with st.sidebar:
     st.markdown("### Settings")
 
-    auto_refresh = st.toggle("Auto-refresh (10s)", value=False)
+    auto_refresh = st.toggle("Auto-refresh (10s)", value=True)
     if auto_refresh:
         st_autorefresh(interval=10_000, key="autorefresh")
 
@@ -82,17 +84,39 @@ with st.sidebar:
     st.caption(f"Data refreshed: {datetime.now().strftime('%H:%M:%S')}")
 
 # ---------------------------------------------------------------
+# LOAD DATA EARLY (header needs regime_df)
+# ---------------------------------------------------------------
+regime_df_early = load_market_regime()
+
+# ---------------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------------
+# Market regime banner
+regime_label = "UNKNOWN"
+regime_color = "#5e72e4"
+regime_text = "Run a scan to detect"
+regime_size = 1.0
+if not regime_df_early.empty:
+    last_regime = regime_df_early.iloc[-1]
+    regime_label = str(last_regime["regime"])
+    regime_color = {"BULLISH": "#00d97e", "NEUTRAL": "#ffa726",
+                     "BEARISH": "#ff5b5b", "CRASH": "#cc0000",
+                     "UNKNOWN": "#5e72e4"}.get(regime_label, "#5e72e4")
+    regime_text = str(last_regime.get("reasoning", ""))[:120]
+    regime_size = float(last_regime.get("size_mult", 1.0))
+
 st.markdown(f"""
 <div class="app-header">
   <div>
     <h1>📈 RDA Stock Trading — Algo Bot</h1>
-    <p>Multi-agent trading system · Nifty 500 universe · {mode} mode</p>
+    <p>Multi-agent · Multi-timeframe · Nifty 500 · {mode} mode</p>
   </div>
   <div style="text-align: right;">
-    <p style="font-size: 11px; opacity: 0.7;">LAST UPDATE</p>
-    <p style="font-size: 16px; font-weight: 600;">{datetime.now().strftime('%H:%M:%S · %d %b %Y')}</p>
+    <p style="font-size: 11px; opacity: 0.7; margin: 0;">MARKET REGIME</p>
+    <p style="font-size: 18px; font-weight: 700; margin: 0; color: {regime_color};">
+      {regime_label} · {regime_size:.0%} size
+    </p>
+    <p style="font-size: 11px; opacity: 0.85; margin: 4px 0 0 0;">{datetime.now().strftime('%H:%M:%S · %d %b %Y')}</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -111,6 +135,8 @@ fundamentals = load_fundamentals()
 news = load_news()
 bt_results = load_backtest_results()
 bt_trades = load_backtest_trades()
+regime_df = load_market_regime()
+analyst_reports = load_analyst_reports()
 kpis = get_kpis(config, positions, trades)
 
 
@@ -183,14 +209,17 @@ st.markdown("<br/>", unsafe_allow_html=True)
 # ---------------------------------------------------------------
 # TABS
 # ---------------------------------------------------------------
-(tab1, tab_watch, tab2, tab3, tab_fund, tab_news,
- tab_bt, tab4, tab5, tab6) = st.tabs([
+(tab1, tab_my, tab_regime, tab_watch, tab2, tab3, tab_fund, tab_news,
+ tab_analyst, tab_bt, tab4, tab5, tab6) = st.tabs([
     "📊 Overview",
+    "💎 My Portfolio",
+    "🌡️ Regime",
     "🔥 Watchlist",
     "💼 Positions & Trades",
     "🎯 Signals",
     "💰 Fundamentals",
     "📰 News",
+    "🎓 Analyst",
     "🧪 Backtest",
     "🤖 Agent Activity",
     "📈 Performance",
@@ -267,6 +296,235 @@ with tab1:
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+
+# ===============================================================
+# TAB — MY PORTFOLIO (manual holdings across all brokers)
+# ===============================================================
+with tab_my:
+    st.markdown("### 💎 My Manual Holdings")
+    st.caption("Track stocks bought through any broker (Groww, Zerodha, Dhan, ICICI, etc.). "
+               "Live prices, P&L, technical signals, and news per stock.")
+
+    holdings = hm.load_holdings()
+
+    # ---- Add new holding form ----
+    with st.expander("➕ Add new holding", expanded=holdings.empty):
+        with st.form("add_holding_form", clear_on_submit=True):
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                new_symbol = st.text_input("Symbol (e.g., RELIANCE)").upper()
+                new_qty = st.number_input("Quantity", min_value=1, step=1, value=10)
+            with c2:
+                new_price = st.number_input("Avg buy price (Rs.)", min_value=0.01, step=0.05, value=100.00)
+                new_date = st.date_input("Buy date", value=datetime.now().date())
+            with c3:
+                new_broker = st.selectbox("Broker", ["Dhan", "Groww", "Zerodha",
+                                                       "ICICI Direct", "Upstox",
+                                                       "Angel One", "HDFC Sec",
+                                                       "Other"])
+                new_notes = st.text_input("Notes (optional)")
+
+            submit = st.form_submit_button("Add holding", use_container_width=True)
+            if submit and new_symbol:
+                hm.add_holding(
+                    symbol=new_symbol, quantity=int(new_qty),
+                    avg_buy_price=float(new_price),
+                    buy_date=str(new_date), broker=new_broker, notes=new_notes,
+                )
+                st.success(f"Added {int(new_qty)} x {new_symbol} @ Rs.{new_price:.2f}")
+                st.cache_data.clear()
+                st.rerun()
+
+    if holdings.empty:
+        st.info("No holdings yet. Use the form above to add your first stock.")
+    else:
+        # ---- Enrich with live data ----
+        with st.spinner("Fetching live prices..."):
+            enriched = hm.enrich_holdings(holdings)
+
+        # ---- Aggregate KPIs ----
+        total_invested = float(enriched["invested"].sum())
+        total_value = float(enriched["current_value"].sum())
+        total_pnl = total_value - total_invested
+        pnl_pct = (total_pnl / total_invested * 100) if total_invested > 0 else 0
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Invested", f"Rs.{total_invested:,.0f}")
+        c2.metric("Current Value", f"Rs.{total_value:,.0f}")
+        c3.metric("Unrealized P&L",
+                   f"Rs.{total_pnl:+,.0f}",
+                   delta=f"{pnl_pct:+.2f}%")
+        c4.metric("Holdings", len(enriched))
+
+        st.markdown("<br/>", unsafe_allow_html=True)
+
+        # ---- Per-holding detail with signals ----
+        st.markdown("### Holdings Detail (with technical signals)")
+        st.caption("Signals computed via existing strategy engine. Refresh to recompute.")
+
+        # Compute signals lazily (these are slow - only on first render)
+        signals_data = []
+        for _, row in enriched.iterrows():
+            sig = hm.get_signal_for_holding(row["symbol"], float(row["current_price"]))
+            signals_data.append(sig)
+        enriched["signal"] = [s.get("signal", "N/A") for s in signals_data]
+        enriched["signal_reason"] = [s.get("reason", "") for s in signals_data]
+        enriched["score"] = [s.get("score", 0) for s in signals_data]
+
+        # Signal emoji
+        def sig_label(s):
+            return {"BUY (add)": "🟢 BUY", "HOLD": "🟡 HOLD",
+                    "SELL": "🔴 SELL", "N/A": "⚪ N/A"}.get(s, s)
+        enriched["signal_label"] = enriched["signal"].apply(sig_label)
+
+        display_cols = [
+            "symbol", "broker", "quantity", "avg_buy_price", "current_price",
+            "invested", "current_value", "unrealized_pnl", "pnl_pct",
+            "gain_type", "signal_label", "signal_reason", "score",
+        ]
+        st.dataframe(
+            enriched[display_cols],
+            use_container_width=True, hide_index=True,
+            column_config={
+                "avg_buy_price": st.column_config.NumberColumn("Buy", format="Rs.%.2f"),
+                "current_price": st.column_config.NumberColumn("LTP", format="Rs.%.2f"),
+                "invested": st.column_config.NumberColumn("Invested", format="Rs.%.0f"),
+                "current_value": st.column_config.NumberColumn("Value", format="Rs.%.0f"),
+                "unrealized_pnl": st.column_config.NumberColumn("P&L", format="Rs.%+.0f"),
+                "pnl_pct": st.column_config.NumberColumn("P&L %", format="%+.2f%%"),
+                "gain_type": "Tax Type",
+                "signal_label": "Signal",
+                "signal_reason": "Reason",
+                "score": st.column_config.NumberColumn("Score", format="%.0f"),
+            },
+        )
+
+        # ---- Charts row ----
+        chart_col1, chart_col2 = st.columns(2)
+        with chart_col1:
+            st.markdown("### Portfolio Allocation")
+            alloc = enriched.set_index("symbol")["current_value"]
+            fig = px.pie(values=alloc.values, names=alloc.index, hole=0.5,
+                         color_discrete_sequence=px.colors.qualitative.Pastel)
+            fig.update_layout(template="plotly_dark",
+                              paper_bgcolor="rgba(0,0,0,0)",
+                              margin=dict(l=0, r=0, t=10, b=0), height=300)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with chart_col2:
+            st.markdown("### P&L by Stock")
+            sorted_df = enriched.sort_values("unrealized_pnl", ascending=True)
+            colors = ["#00d97e" if v >= 0 else "#ff5b5b"
+                       for v in sorted_df["unrealized_pnl"]]
+            fig = px.bar(sorted_df, x="unrealized_pnl", y="symbol",
+                         orientation="h",
+                         color="unrealized_pnl",
+                         color_continuous_scale=[[0, "#ff5b5b"], [0.5, "#5e72e4"], [1, "#00d97e"]])
+            fig.update_layout(template="plotly_dark",
+                              paper_bgcolor="rgba(0,0,0,0)",
+                              plot_bgcolor="rgba(0,0,0,0)",
+                              margin=dict(l=0, r=0, t=10, b=0), height=300,
+                              showlegend=False, coloraxis_showscale=False,
+                              xaxis_title="P&L (Rs.)", yaxis_title="")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # ---- News per holding ----
+        st.markdown("### 📰 News for your holdings")
+        any_news = False
+        for sym in enriched["symbol"].unique():
+            news_items = hm.get_news_for(sym, limit=3)
+            if not news_items:
+                continue
+            any_news = True
+            st.markdown(f"**{sym}**")
+            for item in news_items:
+                sent = item.get("sentiment", "neutral")
+                color = {"negative": "#ff5b5b", "positive": "#00d97e",
+                          "neutral": "#5e72e4"}.get(sent, "#5e72e4")
+                url = item.get("url", "")
+                link = f' · <a href="{url}" target="_blank" style="color: var(--accent);">read &rarr;</a>' if url else ""
+                st.markdown(f"""
+                <div class="activity-item" style="border-left-color: {color};">
+                  <div class="activity-meta">{item.get('published_at', '')[:16]} · {item.get('publisher', '')}</div>
+                  <div class="activity-text">{item.get('headline', '')}{link}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        if not any_news:
+            st.info("No news yet for your holdings. Run news scraper: "
+                    "`python -c \"from agents.research.news_scraper import refresh_news; "
+                    "refresh_news(['" + "','".join(enriched['symbol'].tolist()) + "'])\"`")
+
+        # ---- Manage Holdings (Edit / Delete) ----
+        with st.expander("🛠️ Edit / delete a holding"):
+            if not enriched.empty:
+                idx_to_remove = st.selectbox(
+                    "Select holding to delete",
+                    options=range(len(enriched)),
+                    format_func=lambda i: f"{enriched.iloc[i]['symbol']} - "
+                                           f"{int(enriched.iloc[i]['quantity'])} qty",
+                )
+                if st.button("Delete selected holding", type="secondary"):
+                    hm.delete_holding(idx_to_remove)
+                    st.success("Deleted")
+                    st.cache_data.clear()
+                    st.rerun()
+
+        # ---- Export to Excel ----
+        st.markdown("### Export")
+        export_df = enriched[[
+            "symbol", "broker", "quantity", "avg_buy_price",
+            "current_price", "invested", "current_value", "unrealized_pnl",
+            "pnl_pct", "gain_type", "buy_date", "signal", "signal_reason",
+        ]]
+        csv_data = export_df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "📥 Download as CSV (for tax / records)",
+            data=csv_data,
+            file_name=f"holdings_{datetime.now().date()}.csv",
+            mime="text/csv",
+        )
+
+
+# ===============================================================
+# TAB — MARKET REGIME
+# ===============================================================
+with tab_regime:
+    st.markdown("### 🌡️ Market Regime History")
+    st.caption("Bot auto-blocks BUYs when market is BEARISH/CRASH; uses 50% sizing in NEUTRAL.")
+
+    if regime_df.empty:
+        st.info("No regime history yet. Will populate after first scan.")
+    else:
+        # Latest snapshot
+        last = regime_df.iloc[-1]
+        c1, c2, c3, c4, c5 = st.columns(5)
+        c1.metric("Regime", str(last["regime"]))
+        c2.metric("Nifty 50", f"{float(last['nifty_close']):,.0f}")
+        c3.metric("vs 200-EMA", f"{float(last['nifty_vs_200ema_pct']):+.2f}%")
+        c4.metric("Nifty RSI", f"{float(last['nifty_rsi']):.0f}")
+        c5.metric("India VIX", f"{float(last['vix']):.1f}")
+
+        st.markdown(f"**Position size multiplier:** `{float(last['size_mult']):.0%}`")
+        st.markdown(f"**Reason:** {last['reasoning']}")
+
+        st.markdown("### Regime over time")
+        if "timestamp" in regime_df.columns:
+            regime_df_sorted = regime_df.copy()
+            regime_df_sorted["timestamp"] = pd.to_datetime(regime_df_sorted["timestamp"])
+            fig = px.scatter(
+                regime_df_sorted, x="timestamp", y="nifty_close",
+                color="regime",
+                color_discrete_map={"BULLISH": "#00d97e", "NEUTRAL": "#ffa726",
+                                    "BEARISH": "#ff5b5b", "CRASH": "#cc0000",
+                                    "UNKNOWN": "#5e72e4"},
+                size="vix",
+            )
+            fig.update_layout(template="plotly_dark",
+                              paper_bgcolor="rgba(0,0,0,0)",
+                              plot_bgcolor="rgba(0,0,0,0)",
+                              margin=dict(l=0, r=0, t=10, b=0), height=300)
+            st.plotly_chart(fig, use_container_width=True)
+
 
 # ===============================================================
 # TAB — WATCHLIST (ranked candidates)
@@ -523,6 +781,41 @@ with tab_news:
               </div>
             </div>
             """, unsafe_allow_html=True)
+
+
+# ===============================================================
+# TAB — ANALYST REPORTS
+# ===============================================================
+with tab_analyst:
+    st.markdown("### 🎓 Analyst Reports & Price Targets")
+    st.caption("Cross-validation of bot signals with Wall Street / Dalal Street analyst consensus.")
+
+    if analyst_reports.empty:
+        st.warning("No analyst data yet. Refresh:\n\n"
+                   "`python -c \"from agents.research.analyst_reports import refresh_reports; "
+                   "import pandas as pd; refresh_reports(pd.read_csv('data/nifty500.csv')['symbol'].head(100).tolist())\"`")
+    else:
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Stocks covered", len(analyst_reports))
+        strong_buy = (analyst_reports["consensus"].astype(str).str.contains("buy", case=False)).sum()
+        c2.metric("Buy consensus", int(strong_buy))
+        avg_upside = float(analyst_reports["upside_pct"].mean())
+        c3.metric("Avg upside %", f"{avg_upside:+.1f}%")
+        big_upside = int((analyst_reports["upside_pct"] > 20).sum())
+        c4.metric(">20% upside", big_upside)
+
+        st.markdown("### Top 30 by upside potential")
+        view = analyst_reports.sort_values("upside_pct", ascending=False).head(30)
+        st.dataframe(
+            view, use_container_width=True, hide_index=True,
+            column_config={
+                "current_price": st.column_config.NumberColumn("LTP", format="Rs.%.2f"),
+                "target_mean": st.column_config.NumberColumn("Target", format="Rs.%.2f"),
+                "target_low": st.column_config.NumberColumn("Tgt Low", format="Rs.%.2f"),
+                "target_high": st.column_config.NumberColumn("Tgt High", format="Rs.%.2f"),
+                "upside_pct": st.column_config.NumberColumn("Upside %", format="%+.1f%%"),
+            },
+        )
 
 
 # ===============================================================

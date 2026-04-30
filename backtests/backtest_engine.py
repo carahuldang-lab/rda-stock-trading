@@ -57,6 +57,45 @@ class BacktestResult:
     trades: list[BacktestTrade] = field(default_factory=list)
 
 
+def walk_forward_backtest(
+    df: pd.DataFrame, strategy_fn, strategy_name: str, symbol: str,
+    config: dict, train_window_days: int = 365, test_window_days: int = 90,
+    step_days: int = 90,
+) -> list:
+    """Walk-forward validation — reduces overfitting risk.
+
+    Splits history into rolling train/test windows. Backtests on each test
+    window separately, returns list of BacktestResult per window.
+
+    A strategy that's profitable in 3 of 4 walk-forward windows is genuinely robust;
+    one that's profitable in 1 of 4 is overfit to a single market regime.
+    """
+    if df is None or len(df) < (train_window_days + test_window_days):
+        return []
+
+    results = []
+    start_idx = train_window_days
+    while start_idx + test_window_days <= len(df):
+        end_idx = start_idx + test_window_days
+        test_df = df.iloc[start_idx - 50: end_idx]   # 50-bar warmup
+        res = backtest_strategy_on_symbol(
+            test_df, strategy_fn, strategy_name, symbol, config, warmup_bars=50,
+        )
+        if res is not None:
+            results.append({
+                "window_start": str(df.index[start_idx]),
+                "window_end": str(df.index[end_idx - 1]),
+                "n_trades": res.n_trades,
+                "win_rate_pct": res.win_rate_pct,
+                "total_return_pct": res.total_return_pct,
+                "max_drawdown_pct": res.max_drawdown_pct,
+                "profit_factor": res.profit_factor,
+            })
+        start_idx += step_days
+
+    return results
+
+
 def _equity_drawdown(equity: list[float]) -> float:
     if not equity:
         return 0.0
@@ -89,6 +128,9 @@ def backtest_strategy_on_symbol(
     capital: float = 100_000.0,
     risk_pct: float = 2.0,
     warmup_bars: int = 50,
+    slippage_pct: float = 0.05,        # 5 bps per fill — realistic for liquid Nifty 500 stocks
+    brokerage_per_trade: float = 20.0,
+    stt_pct: float = 0.025,            # STT on sell side
 ) -> Optional[BacktestResult]:
     """Walk-forward backtest of a strategy on a single symbol."""
     if df is None or len(df) < warmup_bars + 30:
@@ -126,9 +168,16 @@ def backtest_strategy_on_symbol(
                 exit_price = position_target
                 exit_reason = "target"
             if exit_price is not None:
-                pnl = (exit_price - position_entry) * position_qty
-                pnl_pct = (exit_price - position_entry) / position_entry * 100
-                cash += position_qty * exit_price
+                # Apply slippage on exit (worst case)
+                exit_price *= (1 - slippage_pct / 100)
+                # Charges: brokerage on entry+exit, STT on sell, GST 18% on brokerage
+                charges = (brokerage_per_trade * 2
+                            + (exit_price * position_qty) * stt_pct / 100
+                            + brokerage_per_trade * 2 * 0.18)
+                pnl = (exit_price - position_entry) * position_qty - charges
+                pnl_pct = ((exit_price - position_entry) / position_entry * 100
+                           - charges / (position_entry * position_qty) * 100)
+                cash += position_qty * exit_price - charges
                 trades.append(BacktestTrade(
                     symbol=symbol, strategy=strategy_name,
                     entry_date=str(position_entry_date),
@@ -167,9 +216,11 @@ def backtest_strategy_on_symbol(
         if qty <= 0:
             continue
 
-        cash -= qty * signal.entry_price
+        # Apply slippage on entry (worst case - pay slightly more)
+        actual_entry = signal.entry_price * (1 + slippage_pct / 100)
+        cash -= qty * actual_entry
         position_qty = qty
-        position_entry = signal.entry_price
+        position_entry = actual_entry
         position_sl = signal.stop_loss
         position_target = signal.target
         position_entry_date = bar_date

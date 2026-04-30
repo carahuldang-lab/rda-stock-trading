@@ -32,13 +32,23 @@ from utils.config_loader import load_config
 from utils.logger import get_logger
 from utils import event_bus, trade_store
 from agents.technical import TechnicalAgent, score_stock, CandidateScore
+from agents.technical.timeframes import recommend_hold_period
 from agents.risk import RiskAgent
 from agents.execution import ExecutionAgent, Order
 from agents.portfolio import PortfolioAgent, Position
+from agents.research.market_regime import (
+    detect_regime, save_regime, detect_sector_strength, save_sector_strength,
+)
+from agents.research.catalyst import detect_catalyst
 from strategies.momentum_breakout import generate_signal as momentum_signal
 from strategies.mean_reversion import generate_signal as mean_rev_signal
+from strategies.fortress import generate_signal as fortress_signal
+from strategies.catalyst_long import generate_signal as catalyst_signal
 
+# Order matters: Fortress > Catalyst > Momentum > Mean Rev (highest conviction first)
 STRATEGIES = {
+    "fortress": fortress_signal,
+    "catalyst_long": catalyst_signal,
     "momentum_breakout": momentum_signal,
     "mean_reversion": mean_rev_signal,
 }
@@ -57,8 +67,8 @@ def parse_args():
                    help="Scan only first N stocks (0 = all)")
     p.add_argument("--paper-trade", action="store_true",
                    help="Execute paper trades for A/A+ grade signals")
-    p.add_argument("--days", type=int, default=120,
-                   help="Days of history to download")
+    p.add_argument("--days", type=int, default=300,
+                   help="Days of history to download (must be >= 200 for Fortress)")
     return p.parse_args()
 
 
@@ -120,9 +130,20 @@ def main():
     event_bus.emit("orchestrator", "bulk_scan_started",
                    f"Scanning {len(symbols)} stocks", level="info")
 
+    # Detect market regime FIRST — affects sizing
+    print("Checking market regime...")
+    regime = detect_regime()
+    save_regime(regime)
+    print(f"  Regime: {regime.regime} ({regime.position_size_multiplier}x size)")
+    print(f"  {regime.reasoning}\n")
+    event_bus.emit("research", "regime_detected",
+                   f"{regime.regime} - {regime.reasoning}",
+                   level="info" if regime.regime == "BULLISH" else "warning")
+
     # Init agents
     technical = TechnicalAgent(config)
     risk = RiskAgent(config)
+    risk.regime_size_multiplier = regime.position_size_multiplier
     execution = ExecutionAgent(config)
     portfolio = PortfolioAgent(config)
 
@@ -138,28 +159,72 @@ def main():
 
     sector_map = dict(zip(master["symbol"], master.get("sector", "")))
 
-    print("Scoring & signaling...")
+    # ---- PASS 1: Score every stock to compute sector strength ----
+    print("Pass 1: scoring all stocks for sector strength...")
+    enriched_data = {}    # symbol → indicator-enriched df
     for i, symbol in enumerate(symbols, 1):
-        if i % 50 == 0:
+        if i % 100 == 0:
             print(f"  Progress: {i}/{len(symbols)}")
-
         df = data.get(symbol)
         if df is None or df.empty:
             skipped += 1
             continue
-
         try:
             df = technical.add_indicators(df)
+            enriched_data[symbol] = df
+            sector = sector_map.get(symbol, "Unknown")
+            score = score_stock(df, symbol=symbol, sector=sector)
+            if score is not None:
+                candidates.append(score)
+        except Exception:
+            skipped += 1
+
+    # ---- Compute SECTOR STRENGTH from full universe ----
+    cand_df = pd.DataFrame([
+        {"symbol": c.symbol, "score": c.score, "sector": c.sector}
+        for c in candidates
+    ])
+    sector_strength = detect_sector_strength(cand_df)
+    save_sector_strength(sector_strength)
+    print(f"\nSector strength: "
+          f"{sum(1 for s in sector_strength.values() if s['strength'] == 'STRONG')} strong, "
+          f"{sum(1 for s in sector_strength.values() if s['strength'] == 'NEUTRAL')} neutral, "
+          f"{sum(1 for s in sector_strength.values() if s['strength'] == 'WEAK')} weak")
+    for sec, info in sorted(sector_strength.items(),
+                             key=lambda x: -x[1]['avg_score'])[:5]:
+        print(f"  {sec[:30]:30s} {info['strength']:8s} "
+              f"avg={info['avg_score']:.0f}  n={info['n_stocks']}")
+    print()
+
+    # ---- DIAGNOSTIC: why didn't Fortress fire on top 3 candidates? ----
+    from strategies.fortress import _check_factors
+    top3 = sorted(candidates, key=lambda c: c.score, reverse=True)[:3]
+    print("\nDiagnostic: Fortress factor breakdown for top 3 candidates:")
+    for c in top3:
+        if c.symbol in enriched_data:
+            _, factors, _ = _check_factors(enriched_data[c.symbol])
+            passed_n = sum(1 for v in factors.values() if v)
+            failed = [k.split("_")[0] for k, v in factors.items() if not v]
+            print(f"  {c.symbol:14s} score={c.score:.0f} | "
+                  f"Fortress {passed_n}/8  missed: {','.join(failed) if failed else 'none'}")
+    print()
+
+    # ---- PASS 2: Run strategies + apply tier sizing ----
+    # CRITICAL: process in DESCENDING SCORE ORDER — best setups get traded first.
+    # Otherwise max_positions cap fills with mediocre alphabet-order picks.
+    print("Pass 2: running strategies with tier-based sizing (best-first)...")
+    score_lookup = {c.symbol: c.score for c in candidates}
+    sorted_symbols = sorted(
+        enriched_data.keys(),
+        key=lambda s: score_lookup.get(s, 0),
+        reverse=True,
+    )
+    for symbol in sorted_symbols:
+        df = enriched_data[symbol]
+        try:
             sector = sector_map.get(symbol, "Unknown")
 
-            # Score every stock
-            score = score_stock(df, symbol=symbol, sector=sector)
-            if score is None:
-                skipped += 1
-                continue
-            candidates.append(score)
-
-            # Run BOTH strategies — first one to fire wins
+            # Run all strategies — first one to fire wins
             signal = None
             for strat_name, strat_fn in STRATEGIES.items():
                 try:
@@ -171,6 +236,58 @@ def main():
                     continue
             if signal is None:
                 continue
+
+            # ---- Tier classification ----
+            # Tier 0: A+ or A grade Fortress → ALWAYS trade (override sector)
+            # Tier 1: catalyst + technical → FULL size (override regime)
+            # Tier 2: technical in STRONG sector → regime-adjusted size
+            # Tier 3: technical in NEUTRAL sector → 0.5x of regime
+            # Tier 4: technical in WEAK sector → SKIP (watchlist only)
+            cat = detect_catalyst(symbol, df)
+            sec_info = sector_strength.get(sector, {})
+            sec_strength = sec_info.get("strength", "NEUTRAL")
+            sec_mult = sec_info.get("size_mult", 0.7)
+
+            is_premium_fortress = ("fortress_aplus" in signal.strategy_name
+                                    or "fortress_a" == signal.strategy_name
+                                    or signal.confidence >= 0.78)
+
+            if is_premium_fortress:
+                tier = "T0"
+                final_mult = 1.0   # A+/A Fortress: override everything
+                tier_reason = f"Premium Fortress (conf={signal.confidence:.2f})"
+            elif cat.has_catalyst and signal.confidence >= 0.65:
+                tier = "T1"
+                final_mult = 1.0   # catalyst overrides regime
+                tier_reason = f"Catalyst: {cat.reasoning}"
+            elif sec_strength == "STRONG":
+                tier = "T2"
+                final_mult = regime.position_size_multiplier
+                tier_reason = f"Strong sector ({sec_info.get('avg_score', 0):.0f} avg score)"
+            elif sec_strength == "NEUTRAL":
+                tier = "T3"
+                final_mult = regime.position_size_multiplier * 0.5
+                tier_reason = f"Neutral sector"
+            else:
+                # T4 — weak sector, skip trade, log to signals as watch
+                event_bus.emit("technical", "watchlist_only",
+                               f"Weak sector {sector} - no trade",
+                               symbol=symbol, level="info")
+                trade_store.append_signal(
+                    symbol=symbol, strategy=signal.strategy_name,
+                    signal_type=signal.signal_type.value,
+                    entry_price=signal.entry_price, stop_loss=signal.stop_loss,
+                    target=signal.target, confidence=signal.confidence,
+                    reasoning=f"Tier 4 (weak sector {sector}): {signal.reasoning}",
+                    status="filtered", rejection_reason="weak sector",
+                )
+                continue
+
+            # Apply tier multiplier to risk_agent
+            risk.regime_size_multiplier = final_mult
+            event_bus.emit("technical", f"signal_{tier.lower()}",
+                           f"{tier} ({final_mult:.0%}): {tier_reason} | {signal.reasoning[:80]}",
+                           symbol=symbol, level="success")
 
             # Got a BUY signal — log it
             event_bus.emit("technical", "signal_generated",
@@ -227,6 +344,9 @@ def main():
             event_bus.emit("execution", "order_filled",
                            f"qty={order.filled_qty} @ {order.avg_fill_price:.2f}",
                            symbol=symbol, level="success")
+            print(f"  [{tier}] {symbol:14s} {signal.signal_type.value} "
+                  f"@ Rs.{signal.entry_price:.2f}  qty={order.filled_qty}  "
+                  f"size={final_mult:.0%}  {tier_reason[:50]}")
             trade_store.append_signal(
                 symbol=symbol, strategy=signal.strategy_name,
                 signal_type=signal.signal_type.value,

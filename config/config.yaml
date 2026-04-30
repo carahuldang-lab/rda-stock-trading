@@ -21,13 +21,15 @@ universe:
 
 # --- RISK MANAGEMENT ---
 risk:
-  risk_per_trade_pct: 2.0       # Max 2% of capital at risk per trade = ₹2,000
+  risk_per_trade_pct: 2.0       # Max 2% of capital at risk per trade = Rs.2,000
   max_open_positions: 5         # Don't hold more than 5 stocks simultaneously
   max_sector_exposure_pct: 40   # Max 40% in one sector
   max_daily_loss_pct: 5         # Auto-stop if daily loss > 5% of capital
-  default_stoploss_pct: 2.0     # Default SL: 2% below entry (overridden per strategy)
+  default_stoploss_pct: 2.0     # Default SL: 2% below entry
   default_target_pct: 4.0       # Default target: 4% (1:2 RR)
   trailing_stop_enabled: true
+  use_kelly_sizing: false       # Toggle Kelly Criterion (needs historical win rate)
+  use_market_regime: true       # Block BUYs in BEARISH/CRASH; halve in NEUTRAL
 
 # --- STRATEGY ---
 strategy:
@@ -64,11 +66,13 @@ fundamental:
 # --- EXECUTION ---
 execution:
   order_type: LIMIT              # MARKET | LIMIT | SL | SL-M
-  product_type: INTRADAY         # INTRADAY | CNC (delivery) | MIS
+  product_type: INTRADAY         # INTRADAY | CNC | MIS
   exchange: NSE                  # NSE | BSE
   retry_attempts: 3
   retry_delay_seconds: 2
-  slippage_buffer_pct: 0.05      # Add to limit price to ensure fill
+  slippage_buffer_pct: 0.05
+  allow_short: false             # Set true to allow SELL signals (intraday short)
+  use_tick_rounding: true        # Round limit prices to NSE tick sizes
 
 # --- LOGGING ---
 logging:
