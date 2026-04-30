@@ -331,14 +331,21 @@ with tab_my:
 
             submit = st.form_submit_button("Add holding", use_container_width=True)
             if submit and new_symbol:
-                hm.add_holding(
-                    symbol=new_symbol, quantity=int(new_qty),
-                    avg_buy_price=float(new_price),
-                    buy_date=str(new_date), broker=new_broker, notes=new_notes,
-                )
-                st.success(f"Added {int(new_qty)} x {new_symbol} @ Rs.{new_price:.2f}")
-                st.cache_data.clear()
-                st.rerun()
+                # Validate symbol before saving
+                is_valid, msg = hm.validate_symbol(new_symbol)
+                if not is_valid:
+                    st.error(f"⚠️ {msg}")
+                    st.caption("Tip: NSE symbols are usually all-caps without spaces. "
+                               "E.g., 'DOMS' (not 'DOM'), 'RELIANCE', 'BAJFINANCE'.")
+                else:
+                    hm.add_holding(
+                        symbol=new_symbol, quantity=int(new_qty),
+                        avg_buy_price=float(new_price),
+                        buy_date=str(new_date), broker=new_broker, notes=new_notes,
+                    )
+                    st.success(f"✅ Added {int(new_qty)} x {new_symbol} @ Rs.{new_price:.2f}")
+                    st.cache_data.clear()
+                    st.rerun()
 
     if holdings.empty:
         st.info("No holdings yet. Use the form above to add your first stock.")
@@ -346,6 +353,16 @@ with tab_my:
         # ---- Enrich with live data ----
         with st.spinner("Fetching live prices..."):
             enriched = hm.enrich_holdings(holdings)
+
+        # Warn about any symbols where price fetch failed
+        bad_symbols = enriched[~enriched["price_ok"]]["symbol"].tolist() if "price_ok" in enriched.columns else []
+        if bad_symbols:
+            st.warning(
+                f"⚠️ Could not fetch live prices for: **{', '.join(bad_symbols)}** — "
+                f"verify these are correct NSE symbols. P&L for these is shown as 0 "
+                f"(not -100%) until corrected. "
+                f"Use the Edit/Delete section below to fix or remove."
+            )
 
         # ---- Aggregate KPIs ----
         total_invested = float(enriched["invested"].sum())

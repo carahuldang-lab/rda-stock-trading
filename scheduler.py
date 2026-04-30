@@ -112,6 +112,17 @@ def task_scalp_scan():
     )
 
 
+def task_exit_manager():
+    """Exit Manager — trailing SL, partial booking, reversal exits. Every 15 min."""
+    if not is_market_open():
+        return
+    log.info("Running exit manager")
+    subprocess.run(
+        [PYTHON_EXE, "scripts/manage_exits.py"],
+        cwd=PROJECT_ROOT, capture_output=True, text=True,
+    )
+
+
 def task_weekly_rebalance():
     """Monday morning — close stale positions, refresh top fortress candidates."""
     if datetime.now().weekday() != 0:    # Monday only
@@ -196,6 +207,14 @@ for hh in range(9, 14):
     for mm in (35, 40, 45, 50, 55, 0, 5, 10, 15, 20, 25, 30):
         try:
             schedule.every().day.at(f"{hh:02d}:{mm:02d}").do(task_scalp_scan)
+        except Exception:
+            pass
+
+# Exit manager every 15 min during market hours (09:30 - 15:15)
+for hh in range(9, 16):
+    for mm in (0, 15, 30, 45):
+        try:
+            schedule.every().day.at(f"{hh:02d}:{mm:02d}").do(task_exit_manager)
         except Exception:
             pass
 

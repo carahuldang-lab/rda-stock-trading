@@ -198,10 +198,48 @@ def get_news_for(symbol: str, limit: int = 3) -> list[dict]:
     return rows.to_dict("records")
 
 
+def validate_symbol(symbol: str) -> tuple[bool, str]:
+    """Check if a symbol is valid on NSE via yfinance.
+
+    Returns (is_valid, error_message_or_suggestion).
+    """
+    if not symbol:
+        return False, "Empty symbol"
+    sym = symbol.upper().strip()
+
+    # First check our cached Nifty 500 master
+    master_path = DATA_DIR / "nifty500.csv"
+    if master_path.exists():
+        try:
+            master = pd.read_csv(master_path)
+            if sym in master["symbol"].values:
+                return True, ""
+            # Suggest close matches
+            matches = master[master["symbol"].str.startswith(sym, na=False)]
+            if not matches.empty:
+                suggestions = matches["symbol"].head(3).tolist()
+                return False, f"Not in Nifty 500. Did you mean: {', '.join(suggestions)}?"
+        except Exception:
+            pass
+
+    # Fallback: try fetching from yfinance
+    try:
+        import yfinance as yf
+        t = yf.Ticker(f"{sym}.NS")
+        info = t.info
+        if info and info.get("regularMarketPrice"):
+            return True, ""
+    except Exception:
+        pass
+
+    return False, f"'{sym}' not found on NSE. Check the exact NSE symbol on dhan.co or screener.in"
+
+
 def enrich_holdings(df: pd.DataFrame) -> pd.DataFrame:
     """Add LTP, P&L, signal, gain_type to holdings dataframe.
 
     Returns enriched df ready for display.
+    Flags rows where LTP fetch failed (current_price = 0).
     """
     if df.empty:
         return df
@@ -211,9 +249,23 @@ def enrich_holdings(df: pd.DataFrame) -> pd.DataFrame:
     prices = fetch_live_prices(symbols)
 
     df["current_price"] = df["symbol"].map(prices).fillna(0.0)
+    df["price_ok"] = df["current_price"] > 0
     df["invested"] = df["quantity"].astype(float) * df["avg_buy_price"].astype(float)
-    df["current_value"] = df["quantity"].astype(float) * df["current_price"]
-    df["unrealized_pnl"] = df["current_value"] - df["invested"]
-    df["pnl_pct"] = (df["unrealized_pnl"] / df["invested"] * 100).round(2)
+
+    # Only compute P&L where LTP is valid; otherwise show 0 P&L (not -100%)
+    df["current_value"] = df.apply(
+        lambda r: r["quantity"] * r["current_price"] if r["price_ok"] else r["invested"],
+        axis=1,
+    )
+    df["unrealized_pnl"] = df.apply(
+        lambda r: (r["current_price"] - r["avg_buy_price"]) * r["quantity"]
+        if r["price_ok"] else 0.0,
+        axis=1,
+    )
+    df["pnl_pct"] = df.apply(
+        lambda r: ((r["current_price"] - r["avg_buy_price"]) / r["avg_buy_price"] * 100)
+        if r["price_ok"] else 0.0,
+        axis=1,
+    ).round(2)
     df["gain_type"] = df["buy_date"].astype(str).apply(gain_type)
     return df

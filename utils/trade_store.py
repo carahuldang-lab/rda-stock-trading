@@ -25,6 +25,7 @@ EQUITY_FILE = DATA_DIR / "equity.csv"
 POSITION_HEADERS = [
     "symbol", "quantity", "entry_price", "entry_time", "stop_loss", "target",
     "current_price", "unrealized_pnl", "sector", "strategy",
+    "initial_sl", "initial_qty", "peak_price", "partial_booked",
 ]
 TRADE_HEADERS = [
     "symbol", "quantity", "entry_price", "exit_price", "entry_time", "exit_time",

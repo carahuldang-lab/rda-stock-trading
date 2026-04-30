@@ -74,6 +74,15 @@ execution:
   allow_short: false             # Set true to allow SELL signals (intraday short)
   use_tick_rounding: true        # Round limit prices to NSE tick sizes
 
+# --- EXIT MANAGEMENT ---
+exit_management:
+  enabled: true
+  active_from_date: "2026-05-01"  # Activates tomorrow — won't touch today's positions
+  trailing_atr_mult: 1.5          # Trail SL at price - 1.5*ATR
+  partial_book_at_r: 1.0          # Book 50% at 1R profit
+  reversal_rsi_threshold: 75      # Trigger reversal exit above this RSI
+  reversal_volume_mult: 1.5       # Plus volume > 1.5x avg
+
 # --- LOGGING ---
 logging:
   level: INFO                    # DEBUG | INFO | WARNING | ERROR
