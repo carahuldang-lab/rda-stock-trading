@@ -33,9 +33,11 @@ RESULTS_FILE = DATA_DIR / "backtest_results.csv"
 TRADES_FILE = DATA_DIR / "backtest_trades.csv"
 
 from strategies.fortress import generate_signal as fortress_signal
+from strategies.gap_up_momentum import generate_signal as gap_up_signal
 
 STRATEGIES = {
     "fortress": fortress_signal,
+    "gap_up_momentum": gap_up_signal,
     "momentum_breakout": momentum_signal,
     "mean_reversion": mean_rev_signal,
 }

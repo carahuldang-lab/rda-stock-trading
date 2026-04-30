@@ -157,10 +157,15 @@ def kpi_card(label: str, value: str, delta: str = "", delta_class: str = "neutra
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
+    # Format Rs.1,00,000 → Rs.1.0L for compactness
+    cap_val = kpis['capital']
+    cash_val = kpis['cash']
+    cap_str = f"Rs.{cap_val/100000:.1f}L" if cap_val >= 100000 else f"Rs.{cap_val:,.0f}"
+    cash_str = f"Rs.{cash_val/100000:.2f}L" if abs(cash_val) >= 100000 else f"Rs.{cash_val:,.0f}"
     st.markdown(kpi_card(
         "Capital",
-        f"Rs.{kpis['capital']:,.0f}",
-        f"Cash: Rs.{kpis['cash']:,.0f}",
+        cap_str,
+        f"Cash: {cash_str}",
         "neutral",
     ), unsafe_allow_html=True)
 
@@ -636,6 +641,28 @@ with tab2:
     if positions.empty:
         st.info("No open positions. The bot hasn't taken any trades yet (or all were closed).")
     else:
+        # Live-refresh LTPs and recompute P&L on-the-fly
+        with st.spinner("Fetching live prices..."):
+            live_prices = hm.fetch_live_prices(positions["symbol"].astype(str).tolist())
+        positions = positions.copy()
+        positions["current_price"] = positions["symbol"].map(live_prices).fillna(
+            positions["current_price"])
+        positions["unrealized_pnl"] = (
+            positions["current_price"].astype(float)
+            - positions["entry_price"].astype(float)
+        ) * positions["quantity"].astype(float)
+        positions["pnl_pct"] = (
+            (positions["current_price"].astype(float) - positions["entry_price"].astype(float))
+            / positions["entry_price"].astype(float) * 100
+        ).round(2)
+
+        # Aggregate live P&L
+        total_pnl_live = float(positions["unrealized_pnl"].sum())
+        st.metric("Live Unrealized P&L",
+                   f"Rs.{total_pnl_live:+,.0f}",
+                   delta=f"{total_pnl_live/kpis['capital']*100:+.2f}% of capital"
+                   if kpis['capital'] else None)
+
         st.dataframe(
             positions,
             use_container_width=True,
@@ -645,7 +672,8 @@ with tab2:
                 "current_price": st.column_config.NumberColumn("LTP", format="Rs.%.2f"),
                 "stop_loss": st.column_config.NumberColumn("SL", format="Rs.%.2f"),
                 "target": st.column_config.NumberColumn("Target", format="Rs.%.2f"),
-                "unrealized_pnl": st.column_config.NumberColumn("P&L", format="Rs.%+.0f"),
+                "unrealized_pnl": st.column_config.NumberColumn("P&L Rs.", format="Rs.%+.0f"),
+                "pnl_pct": st.column_config.NumberColumn("P&L %", format="%+.2f%%"),
             },
         )
 

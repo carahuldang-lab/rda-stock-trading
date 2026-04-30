@@ -30,9 +30,12 @@ from agents.technical import Signal, SignalType
 
 
 def _check_factors(df: pd.DataFrame) -> tuple[bool, dict, list[str]]:
-    """Return (all_passed, factor_results_dict, reasoning_lines)."""
-    if len(df) < 200:
-        return False, {}, ["insufficient history (need 200+ bars)"]
+    """Return (all_passed, factor_results_dict, reasoning_lines).
+
+    Adaptive: if <200 bars (recent IPO), uses 50-EMA as long-term proxy for F3.
+    """
+    if len(df) < 50:
+        return False, {}, ["insufficient history (need 50+ bars)"]
 
     last = df.iloc[-1]
     last5 = df.iloc[-6:-1]
@@ -47,8 +50,12 @@ def _check_factors(df: pd.DataFrame) -> tuple[bool, dict, list[str]]:
     today_vol = float(last["volume"])
     atr = float(last.get("atr", close * 0.02))
 
-    # 200-EMA needed for F3
-    ema200 = float(df["close"].ewm(span=200, adjust=False).mean().iloc[-1])
+    # 200-EMA for F3 — use 50-EMA proxy if data too short
+    if len(df) >= 200:
+        ema200 = float(df["close"].ewm(span=200, adjust=False).mean().iloc[-1])
+    else:
+        # Recent IPO — use the longest available EMA we have (50)
+        ema200 = ema50
 
     factors = {
         "F1_breakout": close >= high20 * 0.998,    # within 0.2% of high — "primed to break"

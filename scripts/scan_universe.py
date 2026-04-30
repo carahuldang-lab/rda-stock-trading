@@ -44,11 +44,13 @@ from strategies.momentum_breakout import generate_signal as momentum_signal
 from strategies.mean_reversion import generate_signal as mean_rev_signal
 from strategies.fortress import generate_signal as fortress_signal
 from strategies.catalyst_long import generate_signal as catalyst_signal
+from strategies.gap_up_momentum import generate_signal as gap_up_signal
 
-# Order matters: Fortress > Catalyst > Momentum > Mean Rev (highest conviction first)
+# Order matters: highest conviction tried first
 STRATEGIES = {
     "fortress": fortress_signal,
     "catalyst_long": catalyst_signal,
+    "gap_up_momentum": gap_up_signal,
     "momentum_breakout": momentum_signal,
     "mean_reversion": mean_rev_signal,
 }
@@ -219,6 +221,12 @@ def main():
         key=lambda s: score_lookup.get(s, 0),
         reverse=True,
     )
+
+    # Track running cash — each new trade can only use what's still available
+    available_cash = float(config["account"]["capital"])
+    cash_buffer_pct = float(config["account"].get("reserve_pct", 10)) / 100
+    usable_cash = available_cash * (1 - cash_buffer_pct)   # keep 10% buffer
+
     for symbol in sorted_symbols:
         df = enriched_data[symbol]
         try:
@@ -330,11 +338,27 @@ def main():
                 signals_rejected += 1
                 continue
 
+            # Capital availability check — don't over-deploy
+            order_cost = check.quantity * signal.entry_price
+            if order_cost > usable_cash:
+                # Reduce qty to fit available cash
+                affordable_qty = int(usable_cash / signal.entry_price)
+                if affordable_qty <= 0:
+                    event_bus.emit("risk", "trade_rejected",
+                                   f"Insufficient cash: need Rs.{order_cost:,.0f}, "
+                                   f"have Rs.{usable_cash:,.0f}",
+                                   symbol=symbol, level="warning")
+                    signals_rejected += 1
+                    continue
+                check = type(check)(approved=True, quantity=affordable_qty,
+                                     reason=f"Reduced from {check.quantity} (cash limit)")
+
             order = execution.place_order(Order(
                 symbol=symbol, side="BUY", quantity=check.quantity,
                 order_type="LIMIT", product_type="INTRADAY",
                 price=signal.entry_price,
             ))
+            usable_cash -= check.quantity * signal.entry_price
             portfolio.open_position(Position(
                 symbol=symbol, quantity=order.filled_qty,
                 entry_price=order.avg_fill_price, entry_time=datetime.now(),
