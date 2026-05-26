@@ -5,7 +5,7 @@
 
 # --- ACCOUNT ---
 account:
-  capital: 100000               # ₹1,00,000 starting capital (Phase 1)
+  capital: 2000000               # ₹20,00,000 deployable (was ₹1,00,000 Phase 1)
   reserve_pct: 10               # Keep 10% as buffer for MTM, brokerage
   trading_mode: PAPER           # PAPER | LIVE — overridden by TRADING_MODE env var
 
