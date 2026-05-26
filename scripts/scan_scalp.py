@@ -53,11 +53,14 @@ def main():
     print(f"  Regime: {regime.regime} (size mult: {regime.position_size_multiplier}x)")
     print(f"  {regime.reasoning}\n")
 
+    # Per user directive: regime is SIZING input, not a veto.
+    # Strong individual stocks (HFCL, Bliss GVS, IFB pattern) can break out
+    # even in BEARISH/CRASH market. Reduce position size instead of blocking.
     if regime.regime in ("BEARISH", "CRASH"):
-        print(f"  [BLOCKED] Regime={regime.regime} — no new scalps today")
-        event_bus.emit("orchestrator", "scalp_blocked",
-                       f"Regime={regime.regime}", level="warning")
-        return
+        event_bus.emit("orchestrator", "scalp_sizing_reduced",
+                       f"Regime={regime.regime} - sizing reduced, not blocked",
+                       level="info")
+        print(f"  [INFO] Regime={regime.regime} - reduced size ({regime.position_size_multiplier}x), continuing scan")
 
     DATA_DIR = Path(__file__).parent.parent / "data"
     master = pd.read_csv(DATA_DIR / "nifty500.csv")
