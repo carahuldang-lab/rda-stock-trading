@@ -82,10 +82,56 @@ def send_tg(text: str) -> None:
         print(f"[alerter] tg exception: {e}")
 
 
+
+def check_anthropic_credits() -> str | None:
+    """Scan ONLY the latest brain run section of brain.log. Each run starts
+    with '[brain] Starting Claude Decision Brain'. If the most recent run
+    completed successfully (sent Telegram) the error is treated as recovered."""
+    log = ROOT / "logs" / "brain.log"
+    if not log.exists():
+        return None
+    try:
+        text = log.read_text(errors="ignore")
+        marker = "[brain] Starting Claude Decision Brain"
+        idx = text.rfind(marker)
+        if idx < 0:
+            return None
+        last_run = text[idx:]
+        has_error = ("credit balance is too low" in last_run.lower()
+                     or "Claude API error 400" in last_run)
+        if not has_error:
+            return None
+        # Error present — was it recovered? Telegram-sent after error = success.
+        if "[brain] Telegram sent" in last_run:
+            return None
+        return ("Anthropic API credits exhausted - brain skipped trade decisions. "
+                "Top up at https://console.anthropic.com/settings/billing")
+    except Exception as e:
+        print(f"[alerter] credit check err: {e}")
+    return None
+
+
+
 def main():
     if not in_market_hours():
         print(f"[alerter] {now_ist().isoformat()} outside market hours; skip")
         return
+    # Check Anthropic credits (in addition to file staleness)
+    credit_alert = check_anthropic_credits()
+    state_init = load_state()
+    if credit_alert:
+        last_credit_ts = state_init.get("last_credit_alert_ts", "1970-01-01T00:00:00+05:30")
+        try:
+            last = datetime.fromisoformat(last_credit_ts)
+            mins = (now_ist() - last).total_seconds() / 60
+        except Exception:
+            mins = 999
+        if mins >= 60:
+            send_tg(f"[RDA] {credit_alert}")
+            state_init["last_credit_alert_ts"] = now_ist().isoformat()
+            save_state(state_init)
+            print("[alerter] credit alert sent")
+
     state = load_state()
     stale = []
     for name, (fname, limit) in WATCH.items():
