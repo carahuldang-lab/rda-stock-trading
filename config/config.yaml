@@ -22,7 +22,7 @@ universe:
 # --- RISK MANAGEMENT ---
 risk:
   risk_per_trade_pct: 2.0       # Max 2% of capital at risk per trade = Rs.2,000
-  max_open_positions: 8         # Up to 8 simultaneous positions for diversification
+  max_open_positions: 20         # raised from 8 - more diversification with 20L capital
   max_sector_exposure_pct: 40   # Max 40% in one sector
   max_daily_loss_pct: 5         # Auto-stop if daily loss > 5% of capital
   default_stoploss_pct: 2.0     # Default SL: 2% below entry
