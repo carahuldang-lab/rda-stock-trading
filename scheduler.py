@@ -132,7 +132,7 @@ def task_scan():
     log.info("Running universe scan (swing strategies)")
     event_bus.emit("scheduler", "scan_triggered", "", level="info")
     subprocess.run(
-        [PYTHON_EXE, "scripts/scan_universe.py", "--limit", "200", "--paper-trade"],
+        [PYTHON_EXE, "scripts/scan_universe.py", "--limit", "500", "--paper-trade"],
         cwd=PROJECT_ROOT, capture_output=True, text=True,
     )
 
@@ -143,7 +143,7 @@ def task_scalp_scan():
         return
     log.info("Running scalp scan (5min ORB)")
     subprocess.run(
-        [PYTHON_EXE, "scripts/scan_scalp.py", "--limit", "30"],
+        [PYTHON_EXE, "scripts/scan_scalp.py", "--limit", "500"],
         cwd=PROJECT_ROOT, capture_output=True, text=True,
     )
 
