@@ -92,11 +92,11 @@ def detect_regime() -> MarketRegime:
     reasons = []
     if vix_val > 25 or pct_5d < -5:
         regime = "CRASH"
-        size_mult = 0.0
+        size_mult = 0.3  # was 0.0 - per user: don't veto, just reduce
         reasons.append(f"VIX={vix_val:.1f}, 5d={pct_5d:+.1f}% — exit longs")
     elif close < ema200 and rsi < 45:
         regime = "BEARISH"
-        size_mult = 0.0
+        size_mult = 0.3  # was 0.0 - per user: don't veto, just reduce
         reasons.append(f"Nifty {pct_vs_200:+.1f}% vs 200-EMA, RSI {rsi:.0f} — block BUYs")
     elif close < ema50 or rsi < 50:
         regime = "NEUTRAL"
