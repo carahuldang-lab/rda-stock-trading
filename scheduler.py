@@ -103,7 +103,7 @@ def task_premarket():
              "import sys; sys.path.insert(0, '.'); "
              "from agents.research.news_scraper import refresh_news; "
              "import pandas as pd; "
-             "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].head(100).tolist())"],
+             "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].tolist())"],
             cwd=PROJECT_ROOT,
         )
         return
@@ -115,7 +115,7 @@ def task_premarket():
          "import sys; sys.path.insert(0, '.'); "
          "from agents.research.news_scraper import refresh_news; "
          "import pandas as pd; "
-         "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].head(200).tolist())"],
+         "refresh_news(pd.read_csv('data/nifty500.csv')['symbol'].tolist())"],
         cwd=PROJECT_ROOT,
     )
     send_telegram(
@@ -175,7 +175,7 @@ def task_weekly_rebalance():
     event_bus.emit("scheduler", "weekly_rebalance", "", level="info")
     # Refresh fundamentals + analyst reports (top 100 stocks)
     subprocess.run(
-        [PYTHON_EXE, "-m", "agents.fundamental.screener", "100"],
+        [PYTHON_EXE, "-m", "agents.fundamental.screener", "500"],
         cwd=PROJECT_ROOT,
     )
     subprocess.run(
@@ -183,7 +183,7 @@ def task_weekly_rebalance():
          "import sys; sys.path.insert(0, '.'); "
          "from agents.research.analyst_reports import refresh_reports; "
          "import pandas as pd; "
-         "refresh_reports(pd.read_csv('data/nifty500.csv')['symbol'].head(100).tolist())"],
+         "refresh_reports(pd.read_csv('data/nifty500.csv')['symbol'].tolist())"],
         cwd=PROJECT_ROOT,
     )
     send_telegram(f"[RDA] Weekly rebalance done at {datetime.now().strftime('%H:%M')}.")

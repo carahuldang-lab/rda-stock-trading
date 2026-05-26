@@ -55,3 +55,14 @@ desktop.ini
 
 # Keep folder structure with .gitkeep
 !.gitkeep
+
+# Added 2026-05-26 — env backups, dynamic data, scheduler backups
+.env.save
+.env.save.*
+scheduler.py.bak.*
+data/*.csv
+data/*.jsonl
+!data/nifty500.csv
+!data/equity.csv
+!data/nse_holidays.csv
+logs/
