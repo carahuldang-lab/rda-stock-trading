@@ -389,25 +389,20 @@ def send_telegram(text: str) -> bool:
         chunks = [text]
     else:
         current = ""
-        for block in text.split("
-
-"):
+        for block in text.split('\n\n'):
             if len(current) + len(block) + 2 > MAX and current:
                 chunks.append(current.rstrip())
-                current = block + "
-
-"
+                current = block + '\n\n'
             else:
-                current += block + "
-
-"
+                current += block + '\n\n'
         if current.strip():
             chunks.append(current.rstrip())
     all_ok = True
     for i, chunk in enumerate(chunks):
-        body = chunk if len(chunks) == 1 else f"_(part {i+1}/{len(chunks)})_
-
-{chunk}"
+        if len(chunks) > 1:
+            body = f'(part {i+1}/{len(chunks)})\n\n' + chunk
+        else:
+            body = chunk
         delivered = False
         for attempt, payload in enumerate([
             {"chat_id": TG_CHAT, "text": body, "parse_mode": "Markdown"},
@@ -417,15 +412,17 @@ def send_telegram(text: str) -> bool:
                 r = requests.post(url, json=payload, timeout=10)
                 if r.ok:
                     if attempt == 1:
-                        print(f"[tg] chunk {i+1} sent as plain text (md rejected)")
+                        print(f'[tg] chunk {i+1} sent as plain text')
                     delivered = True
                     break
-                print(f"[tg] chunk {i+1} attempt {attempt+1} HTTP {r.status_code}: {r.text[:200]}")
+                print(f'[tg] chunk {i+1} attempt {attempt+1} HTTP {r.status_code}: {r.text[:200]}')
             except Exception as e:
-                print(f"[tg] chunk {i+1} attempt {attempt+1} exception: {e}")
+                print(f'[tg] chunk {i+1} exception: {e}')
         if not delivered:
             all_ok = False
     return all_ok
+
+
 
 def log_decision(decision: Dict, context_summary: Dict) -> None:
     DECISIONS_FILE.parent.mkdir(exist_ok=True, parents=True)
@@ -487,7 +484,7 @@ def main():
 
     # 4. Telegram
     if not args.silent and not args.review_only:
-        ok = send_telegram(msg)
+        ok = ok = send_telegram(msg)
         print(f"[brain] Telegram {'sent.' if ok else 'FAILED — message not delivered.'}")
 
 
