@@ -379,26 +379,59 @@ def format_decision_for_telegram(decision: Dict) -> str:
 
 
 def send_telegram(text: str) -> bool:
-    """Send to Telegram. Try Markdown first; if Telegram rejects (400), retry as plain text.
-    Returns True only on confirmed 200 OK. Logs failures."""
+    """Send to Telegram. Chunk to <4000 chars per message. Try Markdown first;
+    fall back to plain text on 400. Returns True if ALL chunks delivered."""
     if not TG_TOKEN or not TG_CHAT:
         print("[tg] no credentials")
         return False
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    for attempt, payload in enumerate([
-        {"chat_id": TG_CHAT, "text": text, "parse_mode": "Markdown"},
-        {"chat_id": TG_CHAT, "text": text},  # fallback: no parse mode
-    ]):
-        try:
-            r = requests.post(url, json=payload, timeout=10)
-            if r.ok:
-                if attempt == 1:
-                    print("[tg] sent as plain text (markdown rejected)")
-                return True
-            print(f"[tg] attempt {attempt+1} HTTP {r.status_code}: {r.text[:300]}")
-        except Exception as e:
-            print(f"[tg] attempt {attempt+1} exception: {e}")
-    return False
+    MAX = 3800  # safe under Telegram's 4096 limit
+
+    # Split on blank lines to keep decisions together
+    chunks = []
+    if len(text) <= MAX:
+        chunks = [text]
+    else:
+        current = ""
+        for block in text.split("
+
+"):
+            if len(current) + len(block) + 2 > MAX and current:
+                chunks.append(current.rstrip())
+                current = block + "
+
+"
+            else:
+                current += block + "
+
+"
+        if current.strip():
+            chunks.append(current.rstrip())
+
+    all_ok = True
+    for i, chunk in enumerate(chunks):
+        # Add part marker if multi-chunk
+        body = chunk if len(chunks) == 1 else f"_(part {i+1}/{len(chunks)})_
+
+{chunk}"
+        delivered = False
+        for attempt, payload in enumerate([
+            {"chat_id": TG_CHAT, "text": body, "parse_mode": "Markdown"},
+            {"chat_id": TG_CHAT, "text": body},
+        ]):
+            try:
+                r = requests.post(url, json=payload, timeout=10)
+                if r.ok:
+                    if attempt == 1:
+                        print(f"[tg] chunk {i+1} sent as plain text (md rejected)")
+                    delivered = True
+                    break
+                print(f"[tg] chunk {i+1} attempt {attempt+1} HTTP {r.status_code}: {r.text[:200]}")
+            except Exception as e:
+                print(f"[tg] chunk {i+1} attempt {attempt+1} exception: {e}")
+        if not delivered:
+            all_ok = False
+    return all_ok
 
 
 def log_decision(decision: Dict, context_summary: Dict) -> None:
