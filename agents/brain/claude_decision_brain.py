@@ -379,15 +379,11 @@ def format_decision_for_telegram(decision: Dict) -> str:
 
 
 def send_telegram(text: str) -> bool:
-    """Send to Telegram. Chunk to <4000 chars per message. Try Markdown first;
-    fall back to plain text on 400. Returns True if ALL chunks delivered."""
+    """Send to Telegram. Chunk to <3800 chars/msg. Try Markdown, fall back to plain on 400."""
     if not TG_TOKEN or not TG_CHAT:
-        print("[tg] no credentials")
-        return False
+        print("[tg] no credentials"); return False
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    MAX = 3800  # safe under Telegram's 4096 limit
-
-    # Split on blank lines to keep decisions together
+    MAX = 3800
     chunks = []
     if len(text) <= MAX:
         chunks = [text]
@@ -407,10 +403,8 @@ def send_telegram(text: str) -> bool:
 "
         if current.strip():
             chunks.append(current.rstrip())
-
     all_ok = True
     for i, chunk in enumerate(chunks):
-        # Add part marker if multi-chunk
         body = chunk if len(chunks) == 1 else f"_(part {i+1}/{len(chunks)})_
 
 {chunk}"
@@ -432,7 +426,6 @@ def send_telegram(text: str) -> bool:
         if not delivered:
             all_ok = False
     return all_ok
-
 
 def log_decision(decision: Dict, context_summary: Dict) -> None:
     DECISIONS_FILE.parent.mkdir(exist_ok=True, parents=True)
