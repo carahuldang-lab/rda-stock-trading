@@ -379,17 +379,26 @@ def format_decision_for_telegram(decision: Dict) -> str:
 
 
 def send_telegram(text: str) -> bool:
+    """Send to Telegram. Try Markdown first; if Telegram rejects (400), retry as plain text.
+    Returns True only on confirmed 200 OK. Logs failures."""
     if not TG_TOKEN or not TG_CHAT:
+        print("[tg] no credentials")
         return False
-    try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT, "text": text, "parse_mode": "Markdown"},
-            timeout=10,
-        )
-        return r.ok
-    except Exception:
-        return False
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    for attempt, payload in enumerate([
+        {"chat_id": TG_CHAT, "text": text, "parse_mode": "Markdown"},
+        {"chat_id": TG_CHAT, "text": text},  # fallback: no parse mode
+    ]):
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+            if r.ok:
+                if attempt == 1:
+                    print("[tg] sent as plain text (markdown rejected)")
+                return True
+            print(f"[tg] attempt {attempt+1} HTTP {r.status_code}: {r.text[:300]}")
+        except Exception as e:
+            print(f"[tg] attempt {attempt+1} exception: {e}")
+    return False
 
 
 def log_decision(decision: Dict, context_summary: Dict) -> None:
@@ -452,8 +461,8 @@ def main():
 
     # 4. Telegram
     if not args.silent and not args.review_only:
-        send_telegram(msg)
-        print("[brain] Telegram sent.")
+        ok = send_telegram(msg)
+        print(f"[brain] Telegram {'sent.' if ok else 'FAILED — message not delivered.'}")
 
 
 if __name__ == "__main__":
