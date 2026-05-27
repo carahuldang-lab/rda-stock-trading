@@ -39,7 +39,6 @@ REFRESH_MAP: Dict[str, List[str]] = {
     "fundamentals.csv": [PYTHON_EXE, "-m", "agents.fundamental.screener"],
     "analyst_reports.csv": [PYTHON_EXE, "-m", "agents.research.analyst_reports"],
     "sector_strength.csv": [PYTHON_EXE, "-m", "agents.research.market_regime", "--sector"],
-    "earnings_calendar.csv": [PYTHON_EXE, "-m", "agents.research.results_calendar"],
 }
 
 # Max age (hours) before triggering refresh
@@ -49,7 +48,6 @@ MAX_AGE_HOURS = {
     "fundamentals.csv": 168,
     "analyst_reports.csv": 168,
     "sector_strength.csv": 24,
-    "earnings_calendar.csv": 24,
 }
 
 
