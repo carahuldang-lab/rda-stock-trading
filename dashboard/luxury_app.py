@@ -14,6 +14,7 @@ import json
 import os
 import sys
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import pandas as pd
@@ -407,8 +408,8 @@ def api_snapshot():
             }
 
     snapshot = {
-        "ts": datetime.now().strftime("%H:%M:%S"),
-        "date": datetime.now().strftime("%a, %d %b %Y"),
+        "ts": datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%H:%M:%S"),
+        "date": datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%a, %d %b %Y"),
         "mode": os.getenv("TRADING_MODE", cfg["account"].get("trading_mode", "PAPER")),
         "capital": capital,
         "deployed": deployed,
@@ -2662,6 +2663,7 @@ async function refresh() {
 refresh();
 setInterval(refresh, 5000);
 </script>
+<div style="margin-top:30px;padding:20px;background:#0f1419;border-radius:12px;"><h2 style="color:#88d3ce;margin-bottom:10px;">🤖 RDA Advisor Chat</h2><iframe src="http://141.148.196.105:8503" style="width:100%;height:600px;border:0;border-radius:8px;background:#0f1419;"></iframe></div>
 </body>
 </html>"""
 
