@@ -97,6 +97,16 @@ def fetch_yf_news(symbol: str, limit: int = 3) -> list:
         return []
 
 
+
+RESULT_KEYWORDS = ["q1 result", "q2 result", "q3 result", "q4 result", "quarterly result",
+                   "earnings", "eps", "net profit", "revenue grew", "results announced",
+                   "result declared", "ebitda", "topline", "bottom line"]
+
+def is_result_news(headline: str, summary: str = "") -> bool:
+    text = (headline + " " + (summary or "")).lower()
+    return any(k in text for k in RESULT_KEYWORDS)
+
+
 def claude_analyze(symbol: str, status: str, headline: str, summary: str,
                    position_info: dict | None) -> dict:
     """Ask Claude to score impact + give actionable advice."""
@@ -150,10 +160,11 @@ def format_message(symbol: str, status: str, headline: str, analysis: dict,
                    position_info: dict | None) -> str:
     impact_emoji = {"POSITIVE": "🟢", "NEGATIVE": "🔴", "NEUTRAL": "⚪"}.get(analysis.get("impact","?"), "❔")
     status_label = {"holding": "💰 HELD", "watchlist": "👀 WATCH", "bot_position": "🤖 BOT"}.get(status, status)
+    result_prefix = "📊 *QUARTERLY RESULT* — " if analysis.get("is_result") else ""
     sev = analysis.get("severity", 0)
     sev_bar = "█" * int(sev) + "░" * (10 - int(sev))
     lines = [
-        f"{impact_emoji} *{symbol}* — {status_label}",
+        f"{result_prefix}{impact_emoji} *{symbol}* — {status_label}",
         f"_{headline[:240]}_",
         "",
         f"*Impact:* {analysis.get('impact','?')} (severity {sev}/10)  `{sev_bar}`",
@@ -209,6 +220,11 @@ def main():
             analysis = claude_analyze(symbol, status, item["headline"],
                                        item.get("summary",""), pos_info.get(symbol))
             sev = analysis.get("severity", 0)
+            is_result = is_result_news(item['headline'], item.get('summary',''))
+            if is_result:
+                sev = max(sev, 6)  # quarterly results = always material
+                analysis['severity'] = sev
+                analysis['is_result'] = True
             if sev < 3:
                 print(f"  skip low severity {sev}")
                 continue
