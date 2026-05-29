@@ -22,6 +22,32 @@ CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
 app = Flask(__name__)
 
 
+
+def resolve_symbol(query: str) -> str:
+    """Convert 'VEDANTA' or 'vodafone idea' to NSE ticker via nifty500.csv."""
+    if not query: return ""
+    q = query.upper().strip()
+    try:
+        import pandas as pd
+        df = pd.read_csv(DATA / "nifty500.csv")
+        # Direct symbol hit
+        if q in df["symbol"].astype(str).str.upper().values:
+            return q
+        # Fuzzy by company name (partial match)
+        col = "company_name" if "company_name" in df.columns else df.columns[1]
+        m = df[df[col].astype(str).str.upper().str.contains(q, na=False, regex=False)]
+        if not m.empty:
+            return str(m.iloc[0]["symbol"]).upper()
+        # Common alias map
+        aliases = {"VEDANTA":"VEDL","INFOSYS":"INFY","RELIANCE":"RELIANCE",
+                   "HDFC BANK":"HDFCBANK","ICICI":"ICICIBANK","TCS":"TCS",
+                   "BHARTI AIRTEL":"BHARTIARTL","VODAFONE IDEA":"IDEA",
+                   "VODAFONE":"IDEA","SBI":"SBIN","STATE BANK":"SBIN"}
+        return aliases.get(q, q)
+    except Exception:
+        return q
+
+
 def gather_symbol_context(symbol: str) -> dict:
     """Pull everything we know about a symbol from CSVs."""
     sym = symbol.upper()
@@ -79,7 +105,8 @@ Keep response under 1500 chars for mobile readability."""
 def api_chat():
     data = request.get_json(force=True)
     question = (data.get("question") or "").strip()
-    symbol = (data.get("symbol") or "").strip().upper() or None
+    raw_sym = (data.get("symbol") or "").strip().upper()
+    symbol = resolve_symbol(raw_sym) if raw_sym else None
     if not question:
         return jsonify({"error": "empty question"}), 400
     answer = ask_claude(question, symbol)

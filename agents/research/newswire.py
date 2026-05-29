@@ -60,11 +60,8 @@ def get_universe() -> dict:
         gh = pd.read_csv(DATA / "groww_holdings.csv")
         for s in gh["symbol"].dropna().astype(str): uni[s.upper()] = "holding"
     except Exception: pass
-    try:
-        pos = pd.read_csv(DATA / "positions.csv")
-        for s in pos["symbol"].dropna().astype(str):
-            if s.upper() not in uni: uni[s.upper()] = "bot_position"
-    except Exception: pass
+    # NOTE: Bot paper positions intentionally EXCLUDED from newswire
+    # per user request — only real Groww holdings + watchlist get news alerts.
     return uni
 
 
