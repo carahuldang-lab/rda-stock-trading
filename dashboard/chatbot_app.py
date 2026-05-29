@@ -68,25 +68,45 @@ def gather_symbol_context(symbol: str) -> dict:
             elif f == "market_regime.csv":
                 ctx[key] = df.iloc[-1].to_dict()
         except Exception: pass
+    # Fetch fresh yfinance news (catches latest catalysts not yet in CSV)
+    try:
+        import yfinance as yf
+        t = yf.Ticker(f"{sym}.NS")
+        if hasattr(t, "news") and t.news:
+            ctx["fresh_news"] = []
+            for it in t.news[:5]:
+                c = it.get("content", it) if isinstance(it, dict) else {}
+                ctx["fresh_news"].append({
+                    "title": c.get("title", it.get("title", ""))[:200],
+                    "publisher": c.get("provider", {}).get("displayName", it.get("publisher", "")) if isinstance(c.get("provider"), dict) else it.get("publisher", ""),
+                    "summary": str(c.get("summary", ""))[:300]
+                })
+    except Exception: pass
     return ctx
 
 
 def ask_claude(question: str, symbol: str | None) -> str:
     if not CLAUDE_KEY: return "Claude API key not configured."
     system = """You are RDA Stock Advisor — sharp Indian equity analyst.
-Answer the user's question DIRECTLY and DECISIVELY. No fluff, no hedging.
+Answer DIRECTLY and DECISIVELY. No fluff, no hedging.
 
-Use ONLY the data provided below. If data is missing, say what's missing and what your
-best inference is given the gap.
+DATA HIERARCHY (use in this order):
+1. The CSV data block below = ground truth for prices, RSI, fundamentals, news (last few days).
+2. Your training knowledge = use for CORPORATE ACTIONS (mergers, demergers, splits, bonus,
+   buybacks, regulatory changes), sector dynamics, management quality, longer-term context.
+   Example: Vedanta Ltd demerger into 5 entities (Aluminum, Power, Oil&Gas, Steel, Base Metals)
+   is critical context for any VEDL view — surface it.
+3. If a stock has a known major corporate action coming, MENTION IT FIRST before technicals.
 
 When recommending buy/sell/hold:
 - Cite specific numbers (RSI, P/E, analyst target, % from 52w high)
 - Give entry price, stop loss, target — be precise
 - State confidence % (0-100)
 - Compare your view vs analyst consensus (two-way check)
+- Flag any known corporate actions / regulatory events that affect the trade
 
-Format with short Markdown. Use 🟢 BUY / 🔴 SELL / 🟡 TRIM / ⚪ HOLD emojis when relevant.
-Keep response under 1500 chars for mobile readability."""
+Format with short Markdown. Use 🟢 BUY / 🔴 SELL / 🟡 TRIM / ⚪ HOLD emojis.
+Keep response under 1800 chars for mobile readability."""
     ctx = gather_symbol_context(symbol) if symbol else {"note": "no specific symbol"}
     user = f"Question: {question}\n\nData about {symbol or 'portfolio'}:\n{json.dumps(ctx, default=str, indent=2)[:15000]}"
     try:
