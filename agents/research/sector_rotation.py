@@ -19,15 +19,15 @@ CLAUDE_MODEL = os.getenv("CLAUDE_MODEL","claude-sonnet-4-5-20250929")
 
 SECTOR_INDICES = {
     "Banking":   "^NSEBANK",
-    "IT":        "NIFTYIT.NS",
-    "Auto":      "NIFTYAUTO.NS",
-    "Pharma":    "NIFTYPHARMA.NS",
-    "FMCG":      "NIFTYFMCG.NS",
-    "Metal":     "NIFTYMETAL.NS",
-    "Realty":    "NIFTYREALTY.NS",
-    "PSU Bank":  "NIFTYPSU.NS",
-    "Energy":    "NIFTYENERGY.NS",
-    "Media":     "NIFTYMEDIA.NS",
+    "IT":        "^CNXIT",
+    "Auto":      "^CNXAUTO",
+    "Pharma":    "^CNXPHARMA",
+    "FMCG":      "^CNXFMCG",
+    "Metal":     "^CNXMETAL",
+    "Realty":    "^CNXREALTY",
+    "PSU Bank":  "^CNXPSUBANK",
+    "Energy":    "^CNXENERGY",
+    "Media":     "^CNXMEDIA",
 }
 
 
