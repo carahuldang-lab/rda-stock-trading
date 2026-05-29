@@ -17,7 +17,7 @@ IST = ZoneInfo("Asia/Kolkata")
 TG = os.getenv("TELEGRAM_NEWS_BOT_TOKEN", "")
 CHAT = os.getenv("TELEGRAM_CHAT_ID", "")
 CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
 KEYWORDS = ["earnings call", "conference call", "concall", "investor presentation",
             "earnings webcast", "transcript", "investor meet", "q1 result", "q2 result",

@@ -18,7 +18,7 @@ CHAT = os.getenv("TELEGRAM_CHAT_ID","")
 CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY","")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL","claude-sonnet-4-5-20250929")
 
-THRESH_PCT = -7.0  # alert when pnl_pct < -7%
+THRESH_PCT = -10.0  # alert when pnl_pct < -7%
 
 
 def load_seen():

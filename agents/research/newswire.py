@@ -26,7 +26,7 @@ IST = ZoneInfo("Asia/Kolkata")
 TG_TOKEN = os.getenv("TELEGRAM_NEWS_BOT_TOKEN", "")
 TG_CHAT = os.getenv("TELEGRAM_CHAT_ID", "")
 CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
 MAX_NEWS_PER_RUN = 5  # don't flood Telegram
 
