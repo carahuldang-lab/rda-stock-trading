@@ -117,6 +117,25 @@ def tavily_search(query: str, max_results: int = 5) -> list:
         print(f"[tavily] err: {e}"); return []
 
 
+
+BRAVE_KEY = os.getenv("BRAVE_API_KEY", "")
+
+def brave_search(query: str, count: int = 5) -> list:
+    """Free 2000 queries/mo. Better Indian context than Google sometimes."""
+    if not BRAVE_KEY: return []
+    try:
+        r = requests.get("https://api.search.brave.com/res/v1/web/search",
+                         headers={"Accept":"application/json", "X-Subscription-Token": BRAVE_KEY},
+                         params={"q": query, "count": count, "country": "IN"}, timeout=15)
+        if not r.ok: return []
+        d = r.json()
+        return [{"title": x.get("title",""), "url": x.get("url",""),
+                 "description": x.get("description","")[:400]}
+                for x in d.get("web", {}).get("results", [])]
+    except Exception as e:
+        print(f"[brave] err: {e}"); return []
+
+
 def gather_context(symbol: str) -> dict:
     sym = symbol.upper()
     ctx = {"symbol": sym, "timestamp": datetime.now(IST).isoformat()}
@@ -136,6 +155,7 @@ def gather_context(symbol: str) -> dict:
         except Exception: pass
     ctx["fresh_news"] = fetch_yf_news(sym, 5)
     ctx["nse_filings"] = fetch_nse_filings(sym, 10)
+    if BRAVE_KEY: ctx["brave_search"] = brave_search(f"{sym} stock news corporate action india latest")
     if TAVILY_KEY:
         ctx["web_research"] = tavily_search(f"{sym} stock latest news corporate action 2026")
     return ctx
